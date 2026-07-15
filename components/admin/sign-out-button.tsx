@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function SignOutButton() {
+/** Nav-style sign-out for the maroon header (white focus ring). */
+export function SignOutButton({ className }: { className?: string }) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -16,7 +17,10 @@ export function SignOutButton() {
   return (
     <button
       onClick={handleSignOut}
-      className="rounded border border-header-foreground/30 px-3 py-1.5 text-sm hover:bg-header-foreground/10"
+      className={
+        className ??
+        "rounded px-2 py-1 text-sm font-semibold hover:bg-maroon-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      }
     >
       Sign out
     </button>

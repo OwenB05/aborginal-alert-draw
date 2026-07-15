@@ -4,9 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { generateSlug } from "@/lib/slug";
-
-const inputClass =
-  "mt-1 w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30";
+import { btnPrimary, card, errorText, heading, input, label } from "@/lib/ui";
 
 export function CreateDrawForm() {
   const router = useRouter();
@@ -43,56 +41,62 @@ export function CreateDrawForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-lg border border-border bg-surface p-5 shadow-sm"
-    >
-      <h2 className="text-lg font-semibold">Create a new draw</h2>
-      <div className="mt-4 space-y-3">
-        <label className="block text-sm font-medium">
-          Draw title <span className="text-danger">*</span>
+    <form onSubmit={handleSubmit} className={`${card} p-5`}>
+      <h2 className={`text-lg ${heading}`}>Create a new draw</h2>
+      <div className="mt-4 space-y-4">
+        <div>
+          <label htmlFor="draw-title" className={label}>
+            Draw title <span className="text-accent-text">*</span>
+          </label>
           <input
+            id="draw-title"
             type="text"
             required
             maxLength={200}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className={inputClass}
+            className={input}
             placeholder="Pow Wow 50/50 Draw"
           />
-        </label>
-        <label className="block text-sm font-medium">
-          Prize
+        </div>
+        <div>
+          <label htmlFor="draw-prize" className={label}>
+            Prize
+          </label>
           <input
+            id="draw-prize"
             type="text"
             maxLength={500}
             value={prize}
             onChange={(e) => setPrize(e.target.value)}
-            className={inputClass}
+            className={input}
             placeholder="Star blanket + $100 gift card"
           />
-        </label>
-        <label className="block text-sm font-medium">
-          Description / rules
+        </div>
+        <div>
+          <label htmlFor="draw-description" className={label}>
+            Description / rules
+          </label>
           <textarea
+            id="draw-description"
             rows={3}
             maxLength={2000}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className={inputClass}
+            className={input}
             placeholder="Winner drawn at 8pm. Must be present to claim."
           />
-        </label>
+        </div>
       </div>
       {error && (
-        <p role="alert" className="mt-3 text-sm text-danger">
+        <p role="alert" className={`mt-3 ${errorText}`}>
           {error}
         </p>
       )}
       <button
         type="submit"
         disabled={submitting}
-        className="mt-4 rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-dark disabled:opacity-60"
+        className={`mt-4 w-full sm:w-auto ${btnPrimary}`}
       >
         {submitting ? "Creating…" : "Create draw & get QR code"}
       </button>

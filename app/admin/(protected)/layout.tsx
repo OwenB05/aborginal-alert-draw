@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MedicineWheel } from "@/components/medicine-wheel";
+import { TopNav, NavLink } from "@/components/layout/top-nav";
+import { Footer } from "@/components/layout/footer";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
+import { btnSecondary, card, heading } from "@/lib/ui";
 
 export default async function AdminLayout({
   children,
@@ -26,54 +27,42 @@ export default async function AdminLayout({
 
   if (!adminRow) {
     return (
-      <main className="mx-auto w-full max-w-md flex-1 px-4 py-16">
-        <div className="rounded-lg border border-border bg-surface p-6 text-center shadow-sm">
-          <h1 className="text-xl font-bold">Not an organizer account</h1>
-          <p className="mt-2 text-sm text-muted">
-            You&apos;re signed in as {user.email}, but this account isn&apos;t
-            authorized to manage draws. Ask an existing organizer to add you.
-          </p>
-          <div className="mt-4 flex justify-center [&>button]:border-border [&>button]:text-foreground">
-            <SignOutButton />
+      <>
+        <TopNav subtitle="Draw Organizer" />
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
+          <div className={`mx-auto mt-12 max-w-md ${card} p-6 text-center`}>
+            <h1 className={`text-xl ${heading}`}>Not an organizer account</h1>
+            <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+              You&apos;re signed in as {user.email}, but this account
+              isn&apos;t authorized to manage draws. Ask an existing organizer
+              to add you.
+            </p>
+            <div className="mt-4 flex justify-center">
+              <SignOutButton className={btnSecondary} />
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   return (
     <>
-      <header className="no-print bg-header text-header-foreground">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/admin" className="flex items-center gap-3">
-            <MedicineWheel className="h-9 w-9" />
-            <span className="leading-tight">
-              <span className="block text-lg font-bold tracking-wide">
-                Aboriginal Alert
-              </span>
-              <span className="block text-xs uppercase tracking-widest text-accent">
-                Draw Organizer Portal
-              </span>
-            </span>
-          </Link>
-          <nav className="flex items-center gap-3 text-sm">
-            <span className="hidden text-header-foreground/70 sm:inline">
-              {user.email}
-            </span>
-            <Link
-              href="/admin/password"
-              className="rounded border border-header-foreground/30 px-3 py-1.5 hover:bg-header-foreground/10"
-            >
-              Password
-            </Link>
-            <SignOutButton />
-          </nav>
-        </div>
-        <div className="h-1 w-full bg-primary" />
-      </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+      <TopNav subtitle="Draw Organizer" homeHref="/admin">
+        <span
+          className="hidden max-w-[16rem] truncate text-xs text-maroon-200 md:inline"
+          title={user.email ?? undefined}
+        >
+          {user.email}
+        </span>
+        <NavLink href="/admin/password">Password</NavLink>
+        <SignOutButton />
+      </TopNav>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
         {children}
       </main>
+      <Footer />
     </>
   );
 }

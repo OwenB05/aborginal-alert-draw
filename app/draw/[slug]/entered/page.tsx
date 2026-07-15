@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
-import { SiteHeader, SiteFooter } from "@/components/site-header";
-import { MedicineWheel } from "@/components/medicine-wheel";
+import { TopNav } from "@/components/layout/top-nav";
+import { Footer } from "@/components/layout/footer";
+import { FeatherGlyph } from "@/components/layout/wordmark";
 import { createClient } from "@/lib/supabase/server";
 import { PUBLIC_DRAW_COLUMNS, type PublicDraw } from "@/lib/types";
+import { card, heading, bodyText } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -23,24 +25,22 @@ export default async function EnteredPage({
 
   return (
     <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 py-16">
-        <div className="rounded-lg border border-border bg-surface p-8 text-center shadow-sm">
-          <MedicineWheel className="mx-auto h-16 w-16" />
-          <h1 className="mt-6 text-3xl font-bold text-success">
-            You&apos;re in!
-          </h1>
-          <p className="mt-3 text-muted">
+      <TopNav subtitle="Community Draws" />
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
+        <div className={`mx-auto mt-16 max-w-xl ${card} p-8 text-center`}>
+          <FeatherGlyph className="mx-auto h-14 w-14 text-accent" />
+          <h1 className={`mt-6 text-2xl ${heading}`}>You&apos;re in!</h1>
+          <p className={`mt-3 ${bodyText}`}>
             Your entry for <span className="font-semibold">{draw.title}</span>{" "}
             has been recorded. If you win, you&apos;ll be contacted at the
             email you provided.
           </p>
-          <p className="mt-6 text-sm text-muted">
+          <p className="mt-6 text-sm text-stone-500 dark:text-stone-400">
             Good luck — you can close this page now.
           </p>
         </div>
       </main>
-      <SiteFooter />
+      <Footer />
     </>
   );
 }

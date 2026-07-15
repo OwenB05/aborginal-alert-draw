@@ -24,7 +24,7 @@ export function QrCode({
       width: size * 2,
       margin: 2,
       errorCorrectionLevel: "M",
-      color: { dark: "#221b16", light: "#ffffff" },
+      color: { dark: "#1c1917", light: "#ffffff" },
     })
       .then(setDataUrl)
       .catch(() => setDataUrl(null));

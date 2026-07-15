@@ -4,7 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { QrCode } from "@/components/admin/qr-code";
+import { StatusBadge } from "@/components/status-badge";
 import type { Draw, Entry, WinnerResult } from "@/lib/types";
+import {
+  btnPrimary,
+  btnSecondary,
+  card,
+  errorText,
+  heading,
+  link,
+  metaText,
+} from "@/lib/ui";
 
 export function DrawDetail({
   initialDraw,
@@ -157,175 +167,217 @@ export function DrawDetail({
         }
       : null);
 
+  const smallBtn = `${btnSecondary} px-3 py-1.5`;
+
   return (
-    <div>
-      <Link href="/admin" className="text-sm text-muted hover:text-primary">
+    <div className="mt-6">
+      <Link href="/admin" className={`text-sm ${link}`}>
         ← All draws
       </Link>
 
-      <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{draw.title}</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className={`text-2xl ${heading}`}>{draw.title}</h1>
           {draw.prize && (
-            <p className="text-sm text-muted">Prize: {draw.prize}</p>
+            <p className={`mt-0.5 text-sm ${metaText}`}>Prize: {draw.prize}</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              draw.status === "open"
-                ? "bg-success/15 text-success"
-                : "bg-border text-muted"
-            }`}
-          >
-            {draw.status === "open" ? "Open for entries" : "Closed"}
-          </span>
-          <button
-            onClick={toggleStatus}
-            disabled={busy}
-            className="rounded border border-border bg-surface px-3 py-1 text-xs font-medium hover:border-primary disabled:opacity-60"
-          >
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status={draw.status} />
+          <button onClick={toggleStatus} disabled={busy} className={smallBtn}>
             {draw.status === "open" ? "Close draw" : "Reopen draw"}
           </button>
         </div>
       </div>
 
       {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
-        >
+        <p role="alert" className={`mt-4 ${errorText}`}>
           {error}
         </p>
       )}
 
       {displayedWinner && (
-        <div className="mt-6 rounded-lg border-2 border-accent bg-accent/10 p-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted">
-            Winner{draw.drawn_at ? ` · drawn ${new Date(draw.drawn_at).toLocaleString()}` : ""}
+        <div className="mt-6 rounded-xl border-2 border-maroon-700 bg-maroon-50 p-6 text-center dark:border-maroon-400 dark:bg-maroon-950">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500 dark:text-stone-400">
+            Winner
+            {draw.drawn_at
+              ? ` · drawn ${new Date(draw.drawn_at).toLocaleString()}`
+              : ""}
           </p>
-          <p className="mt-2 text-3xl font-bold text-primary">
-            🎉 {displayedWinner.full_name}
+          <p className="mt-2 text-2xl font-bold text-maroon-900 sm:text-3xl dark:text-maroon-100">
+            {displayedWinner.full_name}
           </p>
-          <p className="mt-1 text-sm text-muted">{displayedWinner.email}</p>
+          <p className={`mt-1 text-sm ${metaText}`}>{displayedWinner.email}</p>
         </div>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
-        <section className="rounded-lg border border-border bg-surface p-5 shadow-sm">
-          <h2 className="font-semibold">Share this draw</h2>
-          <div className="mt-3 flex justify-center rounded border border-border bg-white p-3">
+      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
+        <section className={`${card} p-5`}>
+          <h2 className={`text-lg ${heading}`}>Share this draw</h2>
+          <div className="mt-3 flex justify-center rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-700">
             <QrCode path={drawPath} size={220} />
           </div>
-          <p className="mt-3 break-all rounded bg-background px-2 py-1.5 text-center text-xs text-muted">
+          <p className="mt-3 break-all rounded-lg bg-stone-50 px-2 py-1.5 text-center text-xs text-stone-500 dark:bg-stone-800 dark:text-stone-400">
             {entryUrl || drawPath}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <button
-              onClick={copyLink}
-              className="rounded border border-border px-3 py-2 font-medium hover:border-primary"
-            >
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button onClick={copyLink} className={`${btnSecondary} text-center`}>
               {copied ? "Copied!" : "Copy link"}
             </button>
             <Link
               href={`/admin/draws/${draw.id}/print`}
-              className="rounded bg-primary px-3 py-2 text-center font-medium text-primary-foreground hover:bg-primary-dark"
+              className={`${btnPrimary} text-center`}
             >
               Print poster
             </Link>
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-surface p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-semibold">
+        <section className={`${card} p-5`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className={`text-lg ${heading}`}>
               Entries{" "}
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm text-primary">
-                {entries.length}
+              <span className="ml-1 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-white">
+                {entries.length > 99 ? "99+" : entries.length}
               </span>
             </h2>
-            <div className="flex gap-2 text-sm">
-              <button
-                onClick={refreshEntries}
-                className="rounded border border-border px-3 py-1.5 hover:border-primary"
-              >
+            <div className="hidden gap-2 sm:flex">
+              <button onClick={refreshEntries} className={smallBtn}>
                 Refresh
               </button>
               <button
                 onClick={exportCsv}
                 disabled={!entries.length}
-                className="rounded border border-border px-3 py-1.5 hover:border-primary disabled:opacity-50"
+                className={`${smallBtn} disabled:opacity-50`}
               >
                 Export CSV
-              </button>
-              <button
-                onClick={pickWinner}
-                disabled={busy || !entries.length}
-                className="rounded bg-primary px-4 py-1.5 font-semibold text-primary-foreground hover:bg-primary-dark disabled:opacity-60"
-              >
-                {busy
-                  ? "Working…"
-                  : draw.winner_entry_id
-                    ? "Re-draw winner"
-                    : "Draw winner"}
               </button>
             </div>
           </div>
 
+          {/* Thumb-friendly primary action; full-width on phones. */}
+          <button
+            onClick={pickWinner}
+            disabled={busy || !entries.length}
+            className={`mt-4 w-full py-3 text-base sm:w-auto sm:py-2 sm:text-sm ${btnPrimary}`}
+          >
+            {busy
+              ? "Working…"
+              : draw.winner_entry_id
+                ? "Re-draw winner"
+                : "Draw winner"}
+          </button>
+
           {!entries.length ? (
-            <p className="mt-6 rounded border border-dashed border-border p-6 text-center text-sm text-muted">
-              No entries yet. Entries appear here as people scan the QR code
-              — this list refreshes automatically while the draw is open.
+            <p className="mt-5 rounded-lg border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500 dark:border-stone-600 dark:text-stone-400">
+              No entries yet. Entries appear here as people scan the QR code —
+              this list refreshes automatically while the draw is open.
             </p>
           ) : (
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                    <th className="py-2 pr-3">#</th>
-                    <th className="py-2 pr-3">Name</th>
-                    <th className="py-2 pr-3">Email</th>
-                    <th className="py-2 pr-3">Entered</th>
-                    <th className="py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.map((entry, i) => (
-                    <tr
-                      key={entry.id}
-                      className={`border-b border-border/60 ${
-                        entry.id === draw.winner_entry_id
-                          ? "bg-accent/10 font-semibold"
-                          : ""
-                      }`}
-                    >
-                      <td className="py-2 pr-3 text-muted">{i + 1}</td>
-                      <td className="py-2 pr-3">
-                        {entry.full_name}
-                        {entry.id === draw.winner_entry_id && (
-                          <span className="ml-2 rounded-full bg-accent/30 px-2 py-0.5 text-xs">
-                            Winner
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 pr-3">{entry.email}</td>
-                      <td className="py-2 pr-3 text-muted">
-                        {new Date(entry.created_at).toLocaleString()}
-                      </td>
-                      <td className="py-2 text-right">
-                        <button
-                          onClick={() => deleteEntry(entry)}
-                          className="text-xs text-muted hover:text-danger"
-                          title="Remove entry"
-                        >
-                          Remove
-                        </button>
-                      </td>
+            <>
+              {/* Mobile: stacked entry cards */}
+              <ul className="mt-5 list-none space-y-3 sm:hidden">
+                {entries.map((entry, i) => (
+                  <li
+                    key={entry.id}
+                    className={`rounded-lg border p-3 ${
+                      entry.id === draw.winner_entry_id
+                        ? "border-maroon-700 bg-maroon-50 dark:border-maroon-400 dark:bg-maroon-950"
+                        : "border-stone-200 dark:border-stone-700"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">
+                          <span className={`mr-1.5 ${metaText}`}>{i + 1}.</span>
+                          {entry.full_name}
+                        </p>
+                        <p className={`truncate text-sm ${metaText}`}>
+                          {entry.email}
+                        </p>
+                        <p className={`mt-1 text-xs ${metaText}`}>
+                          {new Date(entry.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      {entry.id === draw.winner_entry_id && (
+                        <span className="shrink-0 rounded bg-maroon-700 px-2 py-0.5 text-xs font-semibold text-white">
+                          Winner
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={() => deleteEntry(entry)}
+                        className="rounded px-2 py-1 text-xs font-semibold text-stone-500 hover:text-accent-text dark:text-stone-400"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex gap-2 sm:hidden">
+                <button onClick={refreshEntries} className={`flex-1 ${smallBtn}`}>
+                  Refresh
+                </button>
+                <button
+                  onClick={exportCsv}
+                  className={`flex-1 ${smallBtn} disabled:opacity-50`}
+                >
+                  Export CSV
+                </button>
+              </div>
+
+              {/* Desktop: table */}
+              <div className="mt-5 hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500 dark:border-stone-700 dark:text-stone-400">
+                      <th className="py-2 pr-3 font-semibold">#</th>
+                      <th className="py-2 pr-3 font-semibold">Name</th>
+                      <th className="py-2 pr-3 font-semibold">Email</th>
+                      <th className="py-2 pr-3 font-semibold">Entered</th>
+                      <th className="py-2" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {entries.map((entry, i) => (
+                      <tr
+                        key={entry.id}
+                        className={`border-b border-stone-100 dark:border-stone-800 ${
+                          entry.id === draw.winner_entry_id
+                            ? "bg-maroon-50 font-semibold dark:bg-maroon-950"
+                            : ""
+                        }`}
+                      >
+                        <td className={`py-2 pr-3 ${metaText}`}>{i + 1}</td>
+                        <td className="py-2 pr-3">
+                          {entry.full_name}
+                          {entry.id === draw.winner_entry_id && (
+                            <span className="ml-2 rounded bg-maroon-700 px-2 py-0.5 text-xs font-semibold text-white">
+                              Winner
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-3">{entry.email}</td>
+                        <td className={`py-2 pr-3 ${metaText}`}>
+                          {new Date(entry.created_at).toLocaleString()}
+                        </td>
+                        <td className="py-2 text-right">
+                          <button
+                            onClick={() => deleteEntry(entry)}
+                            className="rounded px-2 py-1 text-xs font-semibold text-stone-500 hover:text-accent-text dark:text-stone-400"
+                            title="Remove entry"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
       </div>

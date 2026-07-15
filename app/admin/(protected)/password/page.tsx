@@ -3,14 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { btnPrimary, card, errorText, heading, input, label, link } from "@/lib/ui";
 
 export default function ChangePasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<
-    { kind: "success" | "error"; text: string } | null
-  >(null);
+  const [message, setMessage] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,43 +48,49 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm">
-      <Link href="/admin" className="text-sm text-muted hover:text-primary">
+    <div className="mx-auto mt-6 max-w-sm">
+      <Link href="/admin" className={`text-sm ${link}`}>
         ← All draws
       </Link>
-      <div className="mt-2 rounded-lg border border-border bg-surface p-6 shadow-sm">
-        <h1 className="text-xl font-bold">Change password</h1>
+      <div className={`mt-3 ${card} p-6`}>
+        <h1 className={`text-xl ${heading}`}>Change password</h1>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <label className="block text-sm font-medium">
-            New password
+          <div>
+            <label htmlFor="new-password" className={label}>
+              New password
+            </label>
             <input
+              id="new-password"
               type="password"
               required
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded border border-border bg-background px-3 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+              className={input}
             />
-          </label>
-          <label className="block text-sm font-medium">
-            Confirm new password
+          </div>
+          <div>
+            <label htmlFor="confirm-password" className={label}>
+              Confirm new password
+            </label>
             <input
+              id="confirm-password"
               type="password"
               required
               autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 w-full rounded border border-border bg-background px-3 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+              className={input}
             />
-          </label>
+          </div>
           {message && (
             <p
-              role="alert"
-              className={`rounded px-3 py-2 text-sm ${
+              role={message.kind === "error" ? "alert" : "status"}
+              className={
                 message.kind === "success"
-                  ? "border border-success/40 bg-success/10 text-success"
-                  : "border border-danger/40 bg-danger/10 text-danger"
-              }`}
+                  ? "text-sm font-semibold text-found dark:text-green-300"
+                  : errorText
+              }
             >
               {message.text}
             </p>
@@ -90,7 +98,7 @@ export default function ChangePasswordPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded bg-primary px-4 py-2.5 font-semibold text-primary-foreground hover:bg-primary-dark disabled:opacity-60"
+            className={`${btnPrimary} w-full py-2.5`}
           >
             {submitting ? "Saving…" : "Update password"}
           </button>

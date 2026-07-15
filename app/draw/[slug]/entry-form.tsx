@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-const inputClass =
-  "mt-1 w-full rounded border border-border bg-background px-3 py-2.5 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/30";
+import { btnPrimary, errorText, input, label } from "@/lib/ui";
 
 export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
   const router = useRouter();
@@ -20,9 +18,7 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
     e.preventDefault();
     setError(null);
 
-    if (
-      signatureName.trim().toLowerCase() !== fullName.trim().toLowerCase()
-    ) {
+    if (signatureName.trim().toLowerCase() !== fullName.trim().toLowerCase()) {
       setError(
         "Your signature must match your full name exactly — please type your full legal name in both fields."
       );
@@ -56,7 +52,9 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
           "This draw is no longer accepting entries — it may have just closed."
         );
       } else {
-        setError("Something went wrong submitting your entry. Please try again.");
+        setError(
+          "Something went wrong submitting your entry. Please try again."
+        );
       }
       return;
     }
@@ -65,61 +63,71 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-      <h2 className="border-t border-border pt-4 text-lg font-semibold">
+    <form
+      onSubmit={handleSubmit}
+      className="mt-6 space-y-4 border-t border-stone-200 pt-5 dark:border-stone-700"
+    >
+      <h2 className="text-lg font-bold text-maroon-900 dark:text-maroon-100">
         Enter this draw
       </h2>
 
-      <label className="block text-sm font-medium">
-        Full name
+      <div>
+        <label htmlFor="full-name" className={label}>
+          Full name
+        </label>
         <input
+          id="full-name"
           type="text"
           required
           maxLength={200}
           autoComplete="name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className={inputClass}
+          className={input}
           placeholder="Jane Cardinal"
         />
-      </label>
+      </div>
 
-      <label className="block text-sm font-medium">
-        Email address
+      <div>
+        <label htmlFor="email" className={label}>
+          Email address
+        </label>
         <input
+          id="email"
           type="email"
           required
           maxLength={320}
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
+          className={input}
           placeholder="jane@example.com"
         />
-        <span className="mt-1 block text-xs font-normal text-muted">
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
           One entry per person. We&apos;ll use this to contact you if you win.
-        </span>
-      </label>
+        </p>
+      </div>
 
-      <div className="rounded border border-border bg-background p-4">
-        <label className="block text-sm font-medium">
+      <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800">
+        <label htmlFor="signature" className={label}>
           Electronic signature
-          <input
-            type="text"
-            required
-            maxLength={200}
-            value={signatureName}
-            onChange={(e) => setSignatureName(e.target.value)}
-            className={`${inputClass} font-serif italic`}
-            placeholder="Type your full legal name to sign"
-          />
         </label>
-        <label className="mt-3 flex items-start gap-2 text-xs text-muted">
+        <input
+          id="signature"
+          type="text"
+          required
+          maxLength={200}
+          value={signatureName}
+          onChange={(e) => setSignatureName(e.target.value)}
+          className={`${input} font-serif italic`}
+          placeholder="Type your full legal name to sign"
+        />
+        <label className="mt-3 flex items-start gap-2.5 text-xs text-stone-600 dark:text-stone-300">
           <input
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[#7a1a1a] dark:accent-[#d09c9c]"
           />
           <span>
             By typing my name above and checking this box, I am signing
@@ -131,10 +139,7 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
       </div>
 
       {error && (
-        <p
-          role="alert"
-          className="rounded border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
-        >
+        <p role="alert" className={errorText}>
           {error}
         </p>
       )}
@@ -142,7 +147,7 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary-dark disabled:opacity-60"
+        className={`${btnPrimary} w-full py-3 text-base`}
       >
         {submitting ? "Submitting…" : "Enter the draw"}
       </button>
