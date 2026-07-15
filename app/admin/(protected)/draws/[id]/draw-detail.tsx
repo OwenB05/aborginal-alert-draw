@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { QrCode } from "@/components/admin/qr-code";
+import { DeleteDrawButton } from "@/components/admin/delete-draw-button";
 import { StatusBadge } from "@/components/status-badge";
 import type { Draw, Entry, WinnerLogEntry, WinnerResult } from "@/lib/types";
 import {
@@ -211,10 +212,20 @@ export function DrawDetail({
       )}
 
       {locked && (
-        <p className="mt-4 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
-          This draw is finalized and preserved as a historical record. Reopen
-          it to accept entries, remove an entry, or re-draw.
-        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 dark:border-stone-700 dark:bg-stone-800">
+          <p className="text-sm text-stone-600 dark:text-stone-300">
+            This draw is finalized and preserved as a historical record.
+            Reopen it to accept entries, remove an entry, or re-draw.
+          </p>
+          <DeleteDrawButton
+            drawId={draw.id}
+            title={draw.title}
+            afterDelete="home"
+            className="shrink-0 rounded-lg border border-accent-text/40 px-3 py-1.5 text-sm font-semibold text-accent-text hover:bg-accent/10 dark:border-red-400/40 dark:text-red-400 dark:hover:bg-red-400/10"
+          >
+            Delete draw
+          </DeleteDrawButton>
+        </div>
       )}
 
       {displayedWinner && (

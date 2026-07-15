@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CreateDrawForm } from "@/components/admin/create-draw-form";
+import { DeleteDrawButton } from "@/components/admin/delete-draw-button";
 import { StatusBadge } from "@/components/status-badge";
 import { createClient } from "@/lib/supabase/server";
 import type { Draw } from "@/lib/types";
@@ -12,38 +13,56 @@ type DrawWithMeta = Draw & {
   winner: { full_name: string } | null;
 };
 
-function DrawCard({ draw }: { draw: DrawWithMeta }) {
+function DrawCard({
+  draw,
+  deletable,
+}: {
+  draw: DrawWithMeta;
+  deletable?: boolean;
+}) {
   const count = draw.entries?.[0]?.count ?? 0;
   return (
-    <Link
-      href={`/admin/draws/${draw.id}`}
-      className={`block ${card} p-4 transition hover:border-maroon-400 dark:hover:border-maroon-400 ${ring}`}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className={`truncate text-lg ${heading}`}>{draw.title}</h3>
-          {draw.prize && (
-            <p className={`mt-0.5 truncate text-sm ${metaText}`}>
-              Prize: {draw.prize}
+    <div className="relative">
+      <Link
+        href={`/admin/draws/${draw.id}`}
+        className={`block ${card} p-4 ${deletable ? "pr-24" : ""} transition hover:border-maroon-400 dark:hover:border-maroon-400 ${ring}`}
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className={`truncate text-lg ${heading}`}>{draw.title}</h3>
+            {draw.prize && (
+              <p className={`mt-0.5 truncate text-sm ${metaText}`}>
+                Prize: {draw.prize}
+              </p>
+            )}
+            {draw.winner && (
+              <p className="mt-1 truncate text-sm font-semibold text-maroon-700 dark:text-maroon-300">
+                🏆 Winner: {draw.winner.full_name}
+                {draw.drawn_at
+                  ? ` · ${new Date(draw.drawn_at).toLocaleDateString()}`
+                  : ""}
+              </p>
+            )}
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <StatusBadge status={draw.status} />
+            <p className={`text-sm ${metaText}`}>
+              {count} {count === 1 ? "entry" : "entries"}
             </p>
-          )}
-          {draw.winner && (
-            <p className="mt-1 truncate text-sm font-semibold text-maroon-700 dark:text-maroon-300">
-              🏆 Winner: {draw.winner.full_name}
-              {draw.drawn_at
-                ? ` · ${new Date(draw.drawn_at).toLocaleDateString()}`
-                : ""}
-            </p>
-          )}
+          </div>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <StatusBadge status={draw.status} />
-          <p className={`text-sm ${metaText}`}>
-            {count} {count === 1 ? "entry" : "entries"}
-          </p>
-        </div>
-      </div>
-    </Link>
+      </Link>
+      {deletable && (
+        <DeleteDrawButton
+          drawId={draw.id}
+          title={draw.title}
+          afterDelete="refresh"
+          className="absolute right-3 top-3 rounded px-2 py-1 text-xs font-semibold text-stone-400 hover:bg-accent/10 hover:text-accent-text dark:text-stone-500 dark:hover:text-red-400"
+        >
+          Delete
+        </DeleteDrawButton>
+      )}
+    </div>
   );
 }
 
@@ -104,7 +123,7 @@ export default async function AdminDashboard() {
             <ul className="mt-4 list-none space-y-4">
               {past.map((draw) => (
                 <li key={draw.id}>
-                  <DrawCard draw={draw} />
+                  <DrawCard draw={draw} deletable />
                 </li>
               ))}
             </ul>
