@@ -8,14 +8,11 @@ alter table public.entries
   add column city                 text,
   add column mailing_list_consent boolean not null default false;
 
--- Require province/city for NEW entries without failing pre-existing rows.
-alter table public.entries
-  add constraint entries_location_present
-  check (
-    province is not null and char_length(btrim(province)) between 1 and 100
-    and city is not null and char_length(btrim(city)) between 1 and 120
-  ) not valid;
-
 -- Anon submits these columns from the public entry form.
 grant insert (province, city, mailing_list_consent)
   on public.entries to anon, authenticated;
+
+-- NOTE: province/city are intentionally left nullable and are NOT enforced
+-- by a DB CHECK. The public entry form requires them (client-side); a
+-- blocking DB constraint would reject submissions from any older deployed
+-- form that predates these fields while a rollout is in progress.
