@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { QrCode } from "@/components/admin/qr-code";
 import { StatusBadge } from "@/components/status-badge";
-import type { Draw, Entry, WinnerResult } from "@/lib/types";
+import type { Draw, Entry, WinnerLogEntry, WinnerResult } from "@/lib/types";
 import {
   btnPrimary,
   btnSecondary,
@@ -19,19 +19,25 @@ import {
 export function DrawDetail({
   initialDraw,
   initialEntries,
+  initialWinnerLog,
 }: {
   initialDraw: Draw;
   initialEntries: Entry[];
+  initialWinnerLog: WinnerLogEntry[];
 }) {
   const [draw, setDraw] = useState(initialDraw);
   const [entries, setEntries] = useState(initialEntries);
-  const [winner, setWinner] = useState<WinnerResult | null>(null);
+  const [winnerLog, setWinnerLog] = useState(initialWinnerLog);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [entryUrl, setEntryUrl] = useState("");
 
   const drawPath = `/draw/${draw.slug}`;
+
+  // A closed draw is a finalized historical record: read-only until an
+  // organizer explicitly reopens it to make corrections or re-draw.
+  const locked = draw.status === "closed";
 
   useEffect(() => {
     setEntryUrl(`${window.location.origin}${drawPath}`);
@@ -49,15 +55,12 @@ export function DrawDetail({
   }, [draw.id]);
 
   // Keep the entry list fresh while the draw is open (people are scanning
-  // the QR at the event in real time).
+  // the QR at the event in real time). Closed draws are static history.
   useEffect(() => {
     if (draw.status !== "open") return;
     const interval = setInterval(refreshEntries, 10000);
     return () => clearInterval(interval);
   }, [draw.status, refreshEntries]);
-
-  const currentWinnerEntry =
-    entries.find((e) => e.id === draw.winner_entry_id) ?? null;
 
   async function copyLink() {
     await navigator.clipboard.writeText(entryUrl);
@@ -86,7 +89,7 @@ export function DrawDetail({
     if (
       !confirm(
         draw.winner_entry_id
-          ? "Re-draw a new winner? The previous pick stays in the audit log."
+          ? "Re-draw a new winner? The previous winner stays recorded in this draw's history."
           : "Randomly draw a winner from the current entries?"
       )
     )
@@ -111,12 +114,22 @@ export function DrawDetail({
       return;
     }
     const picked = rows[0];
-    setWinner(picked);
+    const now = new Date().toISOString();
+    // Prepend to the local history so the record updates without a refetch.
+    setWinnerLog((log) => [
+      {
+        id: -Date.now(),
+        entry_id: picked.entry_id,
+        drawn_at: now,
+        entry: { full_name: picked.full_name, email: picked.email },
+      },
+      ...log,
+    ]);
     setDraw({
       ...draw,
       status: "closed",
       winner_entry_id: picked.entry_id,
-      drawn_at: new Date().toISOString(),
+      drawn_at: now,
     });
   }
 
@@ -157,11 +170,12 @@ export function DrawDetail({
     URL.revokeObjectURL(url);
   }
 
+  const currentWinnerEntry =
+    entries.find((e) => e.id === draw.winner_entry_id) ?? null;
   const displayedWinner =
-    winner ??
+    winnerLog[0]?.entry ??
     (currentWinnerEntry
       ? {
-          entry_id: currentWinnerEntry.id,
           full_name: currentWinnerEntry.full_name,
           email: currentWinnerEntry.email,
         }
@@ -185,7 +199,7 @@ export function DrawDetail({
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={draw.status} />
           <button onClick={toggleStatus} disabled={busy} className={smallBtn}>
-            {draw.status === "open" ? "Close draw" : "Reopen draw"}
+            {locked ? "Reopen draw" : "Close draw"}
           </button>
         </div>
       </div>
@@ -193,6 +207,13 @@ export function DrawDetail({
       {error && (
         <p role="alert" className={`mt-4 ${errorText}`}>
           {error}
+        </p>
+      )}
+
+      {locked && (
+        <p className="mt-4 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
+          This draw is finalized and preserved as a historical record. Reopen
+          it to accept entries, remove an entry, or re-draw.
         </p>
       )}
 
@@ -231,6 +252,34 @@ export function DrawDetail({
               Print poster
             </Link>
           </div>
+
+          {/* Draw history — every winner ever picked, including re-draws. */}
+          {winnerLog.length > 0 && (
+            <div className="mt-5 border-t border-stone-200 pt-4 dark:border-stone-700">
+              <h3 className={`text-sm ${heading}`}>Draw history</h3>
+              <ul className="mt-2 list-none space-y-2">
+                {winnerLog.map((w, i) => (
+                  <li key={w.id} className="text-sm">
+                    <span className="font-semibold">
+                      {w.entry?.full_name ?? "Entry removed"}
+                    </span>
+                    {i === 0 ? (
+                      <span className="ml-2 rounded bg-maroon-700 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                        Current
+                      </span>
+                    ) : (
+                      <span className="ml-2 text-[11px] uppercase tracking-wide text-stone-400">
+                        Superseded
+                      </span>
+                    )}
+                    <span className={`block text-xs ${metaText}`}>
+                      {new Date(w.drawn_at).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
         <section className={`${card} p-5`}>
@@ -242,9 +291,11 @@ export function DrawDetail({
               </span>
             </h2>
             <div className="hidden gap-2 sm:flex">
-              <button onClick={refreshEntries} className={smallBtn}>
-                Refresh
-              </button>
+              {!locked && (
+                <button onClick={refreshEntries} className={smallBtn}>
+                  Refresh
+                </button>
+              )}
               <button
                 onClick={exportCsv}
                 disabled={!entries.length}
@@ -255,23 +306,25 @@ export function DrawDetail({
             </div>
           </div>
 
-          {/* Thumb-friendly primary action; full-width on phones. */}
-          <button
-            onClick={pickWinner}
-            disabled={busy || !entries.length}
-            className={`mt-4 w-full py-3 text-base sm:w-auto sm:py-2 sm:text-sm ${btnPrimary}`}
-          >
-            {busy
-              ? "Working…"
-              : draw.winner_entry_id
-                ? "Re-draw winner"
-                : "Draw winner"}
-          </button>
+          {/* Drawing is only available while the draw is open; a closed draw
+              is a locked record (reopen to re-draw). */}
+          {!locked && (
+            <button
+              onClick={pickWinner}
+              disabled={busy || !entries.length}
+              className={`mt-4 w-full py-3 text-base sm:w-auto sm:py-2 sm:text-sm ${btnPrimary}`}
+            >
+              {busy
+                ? "Working…"
+                : draw.winner_entry_id
+                  ? "Re-draw winner"
+                  : "Draw winner"}
+            </button>
+          )}
 
           {!entries.length ? (
             <p className="mt-5 rounded-lg border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500 dark:border-stone-600 dark:text-stone-400">
-              No entries yet. Entries appear here as people scan the QR code —
-              this list refreshes automatically while the draw is open.
+              No entries recorded{locked ? " for this draw." : " yet. Entries appear here as people scan the QR code — this list refreshes automatically while the draw is open."}
             </p>
           ) : (
             <>
@@ -305,28 +358,42 @@ export function DrawDetail({
                         </span>
                       )}
                     </div>
-                    <div className="mt-2 flex justify-end">
-                      <button
-                        onClick={() => deleteEntry(entry)}
-                        className="rounded px-2 py-1 text-xs font-semibold text-stone-500 hover:text-accent-text dark:text-stone-400"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    {!locked && (
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          onClick={() => deleteEntry(entry)}
+                          className="rounded px-2 py-1 text-xs font-semibold text-stone-500 hover:text-accent-text dark:text-stone-400"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex gap-2 sm:hidden">
-                <button onClick={refreshEntries} className={`flex-1 ${smallBtn}`}>
-                  Refresh
-                </button>
-                <button
-                  onClick={exportCsv}
-                  className={`flex-1 ${smallBtn} disabled:opacity-50`}
-                >
-                  Export CSV
-                </button>
-              </div>
+              {!locked && (
+                <div className="mt-3 flex gap-2 sm:hidden">
+                  <button
+                    onClick={refreshEntries}
+                    className={`flex-1 ${smallBtn}`}
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={exportCsv}
+                    className={`flex-1 ${smallBtn} disabled:opacity-50`}
+                  >
+                    Export CSV
+                  </button>
+                </div>
+              )}
+              {locked && (
+                <div className="mt-3 sm:hidden">
+                  <button onClick={exportCsv} className={`w-full ${smallBtn}`}>
+                    Export CSV
+                  </button>
+                </div>
+              )}
 
               {/* Desktop: table */}
               <div className="mt-5 hidden overflow-x-auto sm:block">
@@ -364,13 +431,15 @@ export function DrawDetail({
                           {new Date(entry.created_at).toLocaleString()}
                         </td>
                         <td className="py-2 text-right">
-                          <button
-                            onClick={() => deleteEntry(entry)}
-                            className="rounded px-2 py-1 text-xs font-semibold text-stone-500 hover:text-accent-text dark:text-stone-400"
-                            title="Remove entry"
-                          >
-                            Remove
-                          </button>
+                          {!locked && (
+                            <button
+                              onClick={() => deleteEntry(entry)}
+                              className="rounded px-2 py-1 text-xs font-semibold text-stone-500 hover:text-accent-text dark:text-stone-400"
+                              title="Remove entry"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
