@@ -149,12 +149,24 @@ export function DrawDetail({
   }
 
   function exportCsv() {
-    const header = ["Full name", "Email", "Signature", "Consent", "Entered at"];
+    const header = [
+      "Full name",
+      "Email",
+      "City",
+      "Province",
+      "Signature",
+      "Compassionate Circle consent",
+      "Mailing list consent",
+      "Entered at",
+    ];
     const rows = entries.map((e) => [
       e.full_name,
       e.email,
+      e.city ?? "",
+      e.province ?? "",
       e.signature_name,
       e.consent ? "yes" : "no",
+      e.mailing_list_consent ? "yes" : "no",
       e.created_at,
     ]);
     const csv = [header, ...rows]
@@ -359,6 +371,14 @@ export function DrawDetail({
                         <p className={`truncate text-sm ${metaText}`}>
                           {entry.email}
                         </p>
+                        {(entry.city || entry.province) && (
+                          <p className={`truncate text-xs ${metaText}`}>
+                            {[entry.city, entry.province]
+                              .filter(Boolean)
+                              .join(", ")}
+                            {entry.mailing_list_consent ? " · mailing list" : ""}
+                          </p>
+                        )}
                         <p className={`mt-1 text-xs ${metaText}`}>
                           {new Date(entry.created_at).toLocaleString()}
                         </p>
@@ -414,6 +434,8 @@ export function DrawDetail({
                       <th className="py-2 pr-3 font-semibold">#</th>
                       <th className="py-2 pr-3 font-semibold">Name</th>
                       <th className="py-2 pr-3 font-semibold">Email</th>
+                      <th className="py-2 pr-3 font-semibold">Location</th>
+                      <th className="py-2 pr-3 font-semibold">List</th>
                       <th className="py-2 pr-3 font-semibold">Entered</th>
                       <th className="py-2" />
                     </tr>
@@ -438,6 +460,14 @@ export function DrawDetail({
                           )}
                         </td>
                         <td className="py-2 pr-3">{entry.email}</td>
+                        <td className={`py-2 pr-3 ${metaText}`}>
+                          {[entry.city, entry.province]
+                            .filter(Boolean)
+                            .join(", ") || "—"}
+                        </td>
+                        <td className={`py-2 pr-3 ${metaText}`}>
+                          {entry.mailing_list_consent ? "Yes" : "No"}
+                        </td>
                         <td className={`py-2 pr-3 ${metaText}`}>
                           {new Date(entry.created_at).toLocaleString()}
                         </td>

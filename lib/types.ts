@@ -3,10 +3,22 @@ export type DrawStatus = "open" | "closed";
 /** Columns visible to the public (anon) role — keep in sync with grants. */
 export const PUBLIC_DRAW_COLUMNS = "id,slug,title,description,prize,status";
 
-/** Entrants must sign up here before completing a draw entry (honor system —
- * clicking through unlocks the form). Opens in a new tab. */
-export const COMPASSIONATE_CIRCLE_URL =
-  "https://www.aboriginalalert.ca/compassionate-circle";
+/** Canadian provinces and territories (full names) for the entry form. */
+export const CANADIAN_PROVINCES = [
+  "Alberta",
+  "British Columbia",
+  "Manitoba",
+  "New Brunswick",
+  "Newfoundland and Labrador",
+  "Northwest Territories",
+  "Nova Scotia",
+  "Nunavut",
+  "Ontario",
+  "Prince Edward Island",
+  "Quebec",
+  "Saskatchewan",
+  "Yukon",
+] as const;
 
 export interface PublicDraw {
   id: string;
@@ -29,8 +41,13 @@ export interface Entry {
   draw_id: string;
   full_name: string;
   email: string;
+  province: string | null;
+  city: string | null;
   signature_name: string;
+  /** Required permission to be added to the Compassionate Circle. */
   consent: boolean;
+  /** Optional, separate opt-in to the mailing list (CASL: not pre-checked). */
+  mailing_list_consent: boolean;
   created_at: string;
 }
 
