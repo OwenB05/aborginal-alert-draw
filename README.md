@@ -39,8 +39,16 @@ Built with **Next.js (App Router) + Tailwind** on **Vercel**, with
   never read entries back, so entrant names/emails/signatures are not
   exposed even though the API key is public.
 - Organizer = row in `admin_users` (keyed by auth user id). Signing up a
-  Supabase account does **not** grant access; the allowlist is only editable
-  via SQL. To add an organizer: have them sign in once (or create the user
+  Supabase account does **not** grant access; the allowlist is never writable
+  through the public API.
+- **Inviting organizers (normal path):** an organizer opens **Invite** in the
+  portal, enters an email, and gets a one-time `/invite/<token>` link. The
+  invitee opens it, sets a password, and is granted access. Acceptance runs
+  in the `accept-invite` Edge Function with the service role (server-side): it
+  validates the token, creates the auth user, adds them to `admin_users`, and
+  marks the invite used. Invites live in the admin-only `invites` table and
+  expire after 7 days.
+- **Manual fallback (SQL):** have the person sign in once (or create the user
   in the Supabase dashboard), then run:
 
   ```sql

@@ -18,3 +18,13 @@ export function generateSlug(title: string): string {
 
   return base ? `${base}-${suffix}` : suffix;
 }
+
+/** A long, URL-safe random token for invite links (~43 chars). */
+export function generateToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}

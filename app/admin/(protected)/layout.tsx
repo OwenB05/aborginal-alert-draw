@@ -56,6 +56,7 @@ export default async function AdminLayout({
         >
           {user.email}
         </span>
+        <NavLink href="/admin/invite">Invite</NavLink>
         <NavLink href="/admin/password">Password</NavLink>
         <SignOutButton />
       </TopNav>

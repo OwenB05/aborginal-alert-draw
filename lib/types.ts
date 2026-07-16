@@ -65,3 +65,12 @@ export interface WinnerLogEntry {
   drawn_at: string;
   entry: { full_name: string; email: string } | null;
 }
+
+export interface Invite {
+  id: string;
+  email: string;
+  token: string;
+  created_at: string;
+  expires_at: string;
+  accepted_at: string | null;
+}
