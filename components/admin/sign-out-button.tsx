@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { navPill } from "@/components/layout/main-nav";
 
-/** Nav-style sign-out for the maroon header (white focus ring). */
+/** Sign out. Defaults to the header pill style; pass a className to override
+ * (e.g. the secondary button on the "not an organizer" screen). */
 export function SignOutButton({ className }: { className?: string }) {
   const router = useRouter();
 
@@ -15,13 +17,7 @@ export function SignOutButton({ className }: { className?: string }) {
   }
 
   return (
-    <button
-      onClick={handleSignOut}
-      className={
-        className ??
-        "rounded px-2 py-1 text-sm font-semibold hover:bg-maroon-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-      }
-    >
+    <button onClick={handleSignOut} className={className ?? navPill}>
       Sign out
     </button>
   );

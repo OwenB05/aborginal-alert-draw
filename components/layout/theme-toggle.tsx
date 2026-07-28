@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { navPill } from "./main-nav";
 
 /** Class-based dark mode toggle; persists to localStorage ("aau-theme").
- * Icon is ◐ until mounted (unknown during SSR), then ☀/☾. */
+ * Styled as a header pill. Icon is ◐ until mounted (unknown during SSR),
+ * then ☀/☾. */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
@@ -30,7 +32,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={theme === "dark"}
-      className="rounded px-2 py-1 text-sm hover:bg-maroon-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      className={navPill}
     >
       {theme === null ? "◐" : theme === "dark" ? "☀" : "☾"}
     </button>

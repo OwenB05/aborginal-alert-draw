@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { TopNav } from "@/components/layout/top-nav";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Footer } from "@/components/layout/footer";
 import { StatusBadge } from "@/components/status-badge";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +29,9 @@ export default async function DrawPage({
 
   return (
     <>
-      <TopNav subtitle="Community Draws" />
+      <TopNav>
+        <ThemeToggle />
+      </TopNav>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
         <div className={`mx-auto mt-6 max-w-xl ${card} p-5 sm:p-6`}>
           <div className="flex items-center justify-between gap-3">

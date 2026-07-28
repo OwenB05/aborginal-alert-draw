@@ -1,4 +1,5 @@
 import { TopNav } from "@/components/layout/top-nav";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Footer } from "@/components/layout/footer";
 import { AcceptInviteForm } from "./accept-form";
 
@@ -12,7 +13,9 @@ export default async function AcceptInvitePage({
   const { token } = await params;
   return (
     <>
-      <TopNav subtitle="Draw Organizer" />
+      <TopNav>
+        <ThemeToggle />
+      </TopNav>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
         <AcceptInviteForm token={token} />
       </main>

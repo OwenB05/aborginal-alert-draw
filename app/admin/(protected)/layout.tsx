@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { TopNav, NavLink } from "@/components/layout/top-nav";
+import { TopNav } from "@/components/layout/top-nav";
+import { AdminNav, NavLink } from "@/components/layout/main-nav";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Footer } from "@/components/layout/footer";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +30,10 @@ export default async function AdminLayout({
   if (!adminRow) {
     return (
       <>
-        <TopNav subtitle="Draw Organizer" />
+        <TopNav homeHref="/admin">
+          <ThemeToggle />
+          <SignOutButton />
+        </TopNav>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
           <div className={`mx-auto mt-12 max-w-md ${card} p-6 text-center`}>
             <h1 className={`text-xl ${heading}`}>Not an organizer account</h1>
@@ -49,15 +54,20 @@ export default async function AdminLayout({
 
   return (
     <>
-      <TopNav subtitle="Draw Organizer" homeHref="/admin">
+      <TopNav homeHref="/admin">
+        <AdminNav />
+        <ThemeToggle />
         <span
-          className="hidden max-w-[16rem] truncate text-xs text-maroon-200 md:inline"
+          aria-hidden="true"
+          className="mx-2 hidden h-5 w-px bg-white/30 sm:block"
+        />
+        <span
+          className="hidden max-w-44 truncate text-xs font-normal text-maroon-200 md:inline"
           title={user.email ?? undefined}
         >
           {user.email}
         </span>
-        <NavLink href="/admin/invite">Invite</NavLink>
-        <NavLink href="/admin/password">Password</NavLink>
+        <NavLink item={{ href: "/admin/password", label: "Password" }} />
         <SignOutButton />
       </TopNav>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
