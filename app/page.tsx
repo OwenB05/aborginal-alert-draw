@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { TopNav } from "@/components/layout/top-nav";
 import { NavLink } from "@/components/layout/main-nav";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SettingsMenu } from "@/components/layout/settings-menu";
 import { Footer } from "@/components/layout/footer";
 import { FeatherGlyph } from "@/components/layout/wordmark";
 import { btnPrimary, card, heading, bodyText } from "@/lib/ui";
@@ -11,7 +11,7 @@ export default function Home() {
     <>
       <TopNav>
         <NavLink item={{ href: "/admin", label: "Organizer sign in" }} />
-        <ThemeToggle />
+        <SettingsMenu />
       </TopNav>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
         <div className="mx-auto flex max-w-3xl flex-col items-center pt-16 text-center">

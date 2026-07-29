@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "./globals.css";
+import { A11Y_INIT_SCRIPT } from "@/lib/a11y-prefs";
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
@@ -13,9 +14,6 @@ export const metadata: Metadata = {
     "Enter community draws hosted by Aboriginal Alert — Canada's Indigenous Awareness Network.",
 };
 
-// Applies the stored-or-system theme before first paint (no flash).
-const themeScript = `(function(){try{var t=localStorage.getItem("aau-theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.documentElement.classList.add("dark");}catch(e){}})();`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Applies stored accessibility prefs (theme, text size, font, …)
+            before first paint so there's no flash. */}
+        <script dangerouslySetInnerHTML={{ __html: A11Y_INIT_SCRIPT }} />
       </head>
       <body
         className={`${openSans.variable} font-sans antialiased flex min-h-dvh flex-col`}

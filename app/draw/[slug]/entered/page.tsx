@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { TopNav } from "@/components/layout/top-nav";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SettingsMenu } from "@/components/layout/settings-menu";
 import { Footer } from "@/components/layout/footer";
 import { FeatherGlyph } from "@/components/layout/wordmark";
 import { createClient } from "@/lib/supabase/server";
@@ -27,7 +27,7 @@ export default async function EnteredPage({
   return (
     <>
       <TopNav>
-        <ThemeToggle />
+        <SettingsMenu />
       </TopNav>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
         <div className={`mx-auto mt-16 max-w-xl ${card} p-8 text-center`}>

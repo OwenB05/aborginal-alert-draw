@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TopNav } from "@/components/layout/top-nav";
-import { AdminNav, NavLink } from "@/components/layout/main-nav";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AdminNav } from "@/components/layout/main-nav";
+import { SettingsMenu } from "@/components/layout/settings-menu";
 import { Footer } from "@/components/layout/footer";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export default async function AdminLayout({
     return (
       <>
         <TopNav homeHref="/admin">
-          <ThemeToggle />
+          <SettingsMenu />
           <SignOutButton />
         </TopNav>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">
@@ -56,18 +57,18 @@ export default async function AdminLayout({
     <>
       <TopNav homeHref="/admin">
         <AdminNav />
-        <ThemeToggle />
+        <SettingsMenu showAccount />
         <span
           aria-hidden="true"
           className="mx-2 hidden h-5 w-px bg-white/30 sm:block"
         />
-        <span
-          className="hidden max-w-44 truncate text-xs font-normal text-maroon-200 md:inline"
-          title={user.email ?? undefined}
+        <Link
+          href="/account"
+          className="hidden max-w-44 truncate rounded text-xs font-normal text-maroon-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:inline"
+          title={`${user.email} — account settings`}
         >
           {user.email}
-        </span>
-        <NavLink item={{ href: "/admin/password", label: "Password" }} />
+        </Link>
         <SignOutButton />
       </TopNav>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 sm:px-6">

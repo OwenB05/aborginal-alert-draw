@@ -37,11 +37,90 @@
 /* Manual dark mode: the `dark` class on <html> drives every dark: variant. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-body       { background: #ffffff; color: #1c1917; }  /* stone-900 text on white */
-.dark body { background: #141110; color: #e7e5e4; }  /* warm near-black, stone-200 text */
+/* Font-picker fallback: the settings gear (lib/a11y-prefs.ts) may set
+   --font-sans inline on <html> as '"Chosen Font", var(--font-fallback-sans)'.
+   Plain :root (not @theme) so it is always emitted; keep in sync with the
+   --font-sans above. */
+:root {
+  --font-fallback-sans: var(--font-open-sans), "Segoe UI", system-ui, sans-serif;
+}
 
+body {
+  background: #ffffff;
+  color: #1c1917;
+}
+.dark body {
+  background: #141110;
+  color: #e7e5e4;
+}
+
+/* ---- Accessibility preference classes (set on <html> by lib/a11y-prefs.ts,
+   pre-paint via A11Y_INIT_SCRIPT, interactively via the header settings gear).
+   Class names are a11y-* so they can never collide with Tailwind utilities. */
+
+/* Text size: everything is rem-based, so scaling the root scales the site. */
+html.a11y-text-1 {
+  font-size: 112.5%;
+}
+html.a11y-text-2 {
+  font-size: 125%;
+}
+
+/* Reduce motion: the OS-level setting OR the in-app switch — either wins. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+.a11y-reduce-motion *,
+.a11y-reduce-motion *::before,
+.a11y-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Underline links (buttons unaffected). */
+.a11y-underline-links a {
+  text-decoration-line: underline;
+}
+
+/* High contrast: token-level overrides only. Tailwind 4 utilities compile to
+   var(--color-…) references, so re-pointing the muted tokens under this class
+   restyles every component. Values shift ~two palette steps darker in light… */
+.a11y-contrast {
+  --color-stone-200: #a8a29e; /* borders: stone-200 → stone-400 */
+  --color-stone-300: #78716c; /* borders/inputs: stone-300 → stone-500 */
+  --color-stone-400: #57534e; /* faint text: stone-400 → stone-600 */
+  --color-stone-500: #44403c; /* muted text: stone-500 → stone-700 */
+  --color-stone-600: #292524; /* secondary text: stone-600 → stone-800 */
+  --color-noupdate: #404040;
+  --color-maroon-300: #b56666; /* decorative maroon lifts toward readable */
+}
+.a11y-contrast body {
+  color: #000000;
+}
+/* …and lighten in dark mode (this block re-overrides the one above — both
+   classes sit on <html>, and .dark.a11y-contrast is more specific). */
+.dark.a11y-contrast {
+  --color-stone-300: #e7e5e4;
+  --color-stone-400: #d6d3d1;
+  --color-stone-500: #a8a29e;
+  --color-stone-600: #a8a29e;
+  --color-stone-700: #78716c;
+  --color-maroon-300: #d09c9c;
+}
+.dark.a11y-contrast body {
+  background: #000000;
+  color: #ffffff;
+}
+/* Focus must stay visible in high contrast even where a utility sets
+   outline-none in favour of a subtle ring. */
+.a11y-contrast *:focus-visible {
+  outline: 3px solid currentColor !important;
+  outline-offset: 2px;
 }
 
 @media print {
