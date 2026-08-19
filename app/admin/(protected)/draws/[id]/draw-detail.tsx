@@ -157,6 +157,7 @@ export function DrawDetail({
       "Signature",
       "Compassionate Circle consent",
       "Mailing list consent",
+      "Source",
       "Entered at",
     ];
     const rows = entries.map((e) => [
@@ -167,6 +168,7 @@ export function DrawDetail({
       e.signature_name,
       e.consent ? "yes" : "no",
       e.mailing_list_consent ? "yes" : "no",
+      e.source,
       e.created_at,
     ]);
     const csv = [header, ...rows]
@@ -274,6 +276,20 @@ export function DrawDetail({
             >
               Print poster
             </Link>
+            {/* Offline events (no cell service): print a paper sheet, then
+                transcribe the signed rows afterwards. */}
+            <Link
+              href={`/admin/draws/${draw.id}/sheet`}
+              className={`${btnSecondary} text-center`}
+            >
+              Sign-up sheet
+            </Link>
+            <Link
+              href={`/admin/draws/${draw.id}/paper`}
+              className={`${btnSecondary} text-center`}
+            >
+              Enter paper sheet
+            </Link>
           </div>
 
           {/* Draw history — every winner ever picked, including re-draws. */}
@@ -367,6 +383,11 @@ export function DrawDetail({
                         <p className="truncate font-semibold">
                           <span className={`mr-1.5 ${metaText}`}>{i + 1}.</span>
                           {entry.full_name}
+                          {entry.source === "paper" && (
+                            <span className="ml-1.5 rounded border border-stone-300 px-1 py-0.5 align-middle text-[10px] font-semibold uppercase text-stone-500 dark:border-stone-600 dark:text-stone-400">
+                              Paper
+                            </span>
+                          )}
                         </p>
                         <p className={`truncate text-sm ${metaText}`}>
                           {entry.email}
@@ -453,6 +474,11 @@ export function DrawDetail({
                         <td className={`py-2 pr-3 ${metaText}`}>{i + 1}</td>
                         <td className="py-2 pr-3">
                           {entry.full_name}
+                          {entry.source === "paper" && (
+                            <span className="ml-1.5 rounded border border-stone-300 px-1 py-0.5 text-[10px] font-semibold uppercase text-stone-500 dark:border-stone-600 dark:text-stone-400">
+                              Paper
+                            </span>
+                          )}
                           {entry.id === draw.winner_entry_id && (
                             <span className="ml-2 rounded bg-maroon-700 px-2 py-0.5 text-xs font-semibold text-white">
                               Winner
