@@ -136,6 +136,7 @@ export function AdminNav() {
           match: (p) => p === "/admin" || p.startsWith("/admin/draws"),
         }}
       />
+      <NavLink item={{ href: "/admin/circle", label: "Circle" }} />
       <NavLink item={{ href: "/admin/invite", label: "Invitations" }} />
     </>
   );

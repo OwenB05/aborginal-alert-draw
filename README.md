@@ -59,6 +59,15 @@ Built with **Next.js (App Router) + Tailwind** on **Vercel**, with
 - Winner selection runs inside the `pick_winner` Postgres function:
   admin-checked, row-locked against double-clicks, uniformly random, and
   audit-logged.
+- **Compassion Circle Comparison** (portal → Circle): compares event
+  entrants against the Airtable "Individuals - Compassion Circle" table,
+  matched by email, and lists who still needs signing up (click a person to
+  copy their details). The comparison runs in the `circle-compare` Edge
+  Function; the read-only Airtable token lives in Supabase Vault, exposed
+  only through the service-role-only `get_airtable_pat()` function — never
+  in the repo, browser, or public API. To rotate the token:
+  `select vault.update_secret(id, '<new token>')` on the `airtable_pat`
+  Vault row.
 
 ## Development
 
