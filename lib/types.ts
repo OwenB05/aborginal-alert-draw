@@ -73,6 +73,9 @@ export interface Invite {
   id: string;
   email: string;
   token: string;
+  /** 'invite' grants access to someone new; 'reset' lets an existing
+   * organizer set a new password (same link mechanics either way). */
+  purpose: "invite" | "reset";
   created_at: string;
   expires_at: string;
   accepted_at: string | null;

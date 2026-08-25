@@ -63,7 +63,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
 
     if (signInError) {
       setError(
-        "Your account was created, but sign-in failed. Try signing in from the login page."
+        "Your password was set, but sign-in failed. Try signing in from the login page."
       );
       return;
     }
@@ -73,10 +73,10 @@ export function AcceptInviteForm({ token }: { token: string }) {
 
   return (
     <div className={`mx-auto mt-12 max-w-sm ${card} p-6`}>
-      <h1 className={`text-2xl ${heading}`}>Accept your invitation</h1>
+      <h1 className={`text-2xl ${heading}`}>Set your password</h1>
       <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-        You&apos;ve been invited to be a draw organizer. Set a password to
-        create your account.
+        Choose a password for your organizer account — whether you&apos;re
+        joining for the first time or resetting a forgotten one.
       </p>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -117,7 +117,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
           disabled={submitting}
           className={`${btnPrimary} w-full py-2.5`}
         >
-          {submitting ? "Setting up…" : "Create account & sign in"}
+          {submitting ? "Setting up…" : "Set password & sign in"}
         </button>
       </form>
     </div>

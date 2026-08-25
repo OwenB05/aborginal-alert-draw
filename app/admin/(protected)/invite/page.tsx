@@ -39,7 +39,7 @@ export default function InvitePage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("invites")
-      .select("id, email, token, created_at, expires_at, accepted_at")
+      .select("id, email, token, purpose, created_at, expires_at, accepted_at")
       .order("created_at", { ascending: false })
       .returns<Invite[]>();
     if (data) setInvites(data);
@@ -49,8 +49,10 @@ export default function InvitePage() {
     load();
   }, [load]);
 
-  async function createInvite(e: React.FormEvent) {
-    e.preventDefault();
+  // One mechanic, two labels: an "invite" grants access to someone new; a
+  // "reset" lets an existing organizer choose a new password via the same
+  // one-time link.
+  async function createLink(purpose: "invite" | "reset") {
     setError(null);
     setSubmitting(true);
 
@@ -58,15 +60,21 @@ export default function InvitePage() {
     const { error: insertError } = await supabase.from("invites").insert({
       email: email.trim().toLowerCase(),
       token: generateToken(),
+      purpose,
     });
     setSubmitting(false);
 
     if (insertError) {
-      setError("Could not create the invite. Please try again.");
+      setError("Could not create the link. Please try again.");
       return;
     }
     setEmail("");
     load();
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    createLink("invite");
   }
 
   async function copyLink(inv: Invite) {
@@ -102,7 +110,7 @@ export default function InvitePage() {
             Create a one-time link for someone to set their password and get
             organizer access. Send it to the email you enter below.
           </p>
-          <form onSubmit={createInvite} className="mt-4 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
               <label htmlFor="invite-email" className={label}>
                 Their email
@@ -130,6 +138,19 @@ export default function InvitePage() {
             >
               {submitting ? "Creating…" : "Create invite link"}
             </button>
+            <button
+              type="button"
+              disabled={submitting || !email.trim()}
+              onClick={() => createLink("reset")}
+              className={`${btnSecondary} w-full`}
+            >
+              Send password reset link
+            </button>
+            <p className={`text-xs ${metaText}`}>
+              Password reset: for an existing organizer who&apos;s locked out.
+              It creates a one-time link (listed on the right) — copy it and
+              send it to them; opening it lets them set a new password.
+            </p>
           </form>
         </section>
 
@@ -147,10 +168,19 @@ export default function InvitePage() {
                   <li key={inv.id} className={`${card} p-4`}>
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate font-semibold">{inv.email}</p>
+                        <p className="truncate font-semibold">
+                          {inv.email}
+                          {inv.purpose === "reset" && (
+                            <span className="ml-1.5 rounded border border-stone-300 px-1 py-0.5 align-middle text-[10px] font-semibold uppercase text-stone-500 dark:border-stone-600 dark:text-stone-400">
+                              Password reset
+                            </span>
+                          )}
+                        </p>
                         <p className={`text-xs ${metaText}`}>
                           {status === "accepted"
-                            ? `Joined ${new Date(inv.accepted_at!).toLocaleString()}`
+                            ? inv.purpose === "reset"
+                              ? `Password reset ${new Date(inv.accepted_at!).toLocaleString()}`
+                              : `Joined ${new Date(inv.accepted_at!).toLocaleString()}`
                             : status === "expired"
                               ? `Expired ${new Date(inv.expires_at).toLocaleDateString()}`
                               : `Expires ${new Date(inv.expires_at).toLocaleDateString()}`}

@@ -80,10 +80,13 @@ Deno.serve(async (req) => {
     userId = existing.id;
   }
 
+  // Grant access if new; leave an existing organizer row (and its note)
+  // untouched — a password reset must not rewrite it.
   const { error: grantErr } = await admin
     .from("admin_users")
     .upsert({ user_id: userId, note: `Invited: ${email}` }, {
       onConflict: "user_id",
+      ignoreDuplicates: true,
     });
   if (grantErr) return json(500, { error: "Could not grant organizer access." });
 
