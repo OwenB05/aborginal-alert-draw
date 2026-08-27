@@ -33,6 +33,33 @@ type CompareResult = {
   missing: Person[];
 };
 
+/** One section per draw; a person who entered several draws appears in each
+ * (they're equally "not signed up" from every event's perspective). */
+type DrawGroup = {
+  title: string;
+  missing: Person[];
+  matched: Person[];
+  latest: string;
+};
+
+function groupByDraw(data: CompareResult): DrawGroup[] {
+  const titles = new Set<string>();
+  for (const p of [...data.missing, ...data.matched])
+    for (const t of p.draws) titles.add(t);
+
+  const groups = [...titles].map((title) => {
+    const missing = data.missing.filter((p) => p.draws.includes(title));
+    const matched = data.matched.filter((p) => p.draws.includes(title));
+    const latest = [...missing, ...matched]
+      .map((p) => p.first_entered_at)
+      .sort()
+      .at(-1) as string;
+    return { title, missing, matched, latest };
+  });
+  // Most recent event first.
+  return groups.sort((a, b) => (a.latest < b.latest ? 1 : -1));
+}
+
 function StatTile({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className={`${card} p-4`}>
@@ -65,11 +92,113 @@ function detailsBlock(p: Person): string {
   ].join("\n");
 }
 
+function PersonCard({
+  p,
+  open,
+  onToggle,
+  copied,
+  onCopy,
+}: {
+  p: Person;
+  open: boolean;
+  onToggle: () => void;
+  copied: string | null;
+  onCopy: (text: string, key: string) => void;
+}) {
+  return (
+    <li className={`${card} overflow-hidden`}>
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 text-left hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-maroon-700 dark:hover:bg-stone-800"
+      >
+        <span className="min-w-0">
+          <span className="font-semibold">{p.full_name}</span>
+          <span className={`ml-2 text-sm ${metaText}`}>{p.email}</span>
+        </span>
+        <span className={`flex items-center gap-2 text-xs ${metaText}`}>
+          {p.source === "paper" && (
+            <span className="rounded border border-stone-300 px-1 py-0.5 font-semibold uppercase dark:border-stone-600">
+              Paper
+            </span>
+          )}
+          {[p.city, p.province].filter(Boolean).join(", ")}
+          <span aria-hidden="true">{open ? "▲" : "▼"}</span>
+        </span>
+      </button>
+
+      {open && (
+        <div className="border-t border-stone-200 px-4 py-4 dark:border-stone-700">
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>Full name</dt>
+              <dd className="font-medium">{p.full_name}</dd>
+            </div>
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>Email</dt>
+              <dd className="break-all font-medium">{p.email}</dd>
+            </div>
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>City</dt>
+              <dd className="font-medium">{p.city ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>Province</dt>
+              <dd className="font-medium">{p.province ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>Event(s)</dt>
+              <dd className="font-medium">{p.draws.join("; ")}</dd>
+            </div>
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>Entered</dt>
+              <dd className="font-medium">
+                {new Date(p.first_entered_at).toLocaleDateString()}
+                {p.source === "paper" ? " · paper sheet" : " · online"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3 sm:justify-start">
+              <dt className={`${metaText} sm:w-32`}>Mailing list</dt>
+              <dd className="font-medium">
+                {p.mailing_list_consent ? "Opted in" : "No"}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => onCopy(detailsBlock(p), p.email)}
+              className={btnPrimary}
+            >
+              {copied === p.email ? "Copied!" : "Copy details"}
+            </button>
+            <button
+              onClick={() => onCopy(p.email, `${p.email}-mail`)}
+              className={btnSecondary}
+            >
+              {copied === `${p.email}-mail` ? "Copied!" : "Copy email"}
+            </button>
+            <a
+              href={AIRTABLE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={`${btnSecondary} text-center`}
+            >
+              Add in Airtable ↗
+            </a>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
+
 export function CircleComparison() {
   const [data, setData] = useState<CompareResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openEmail, setOpenEmail] = useState<string | null>(null);
+  // Key is `${draw title}:${email}` — the same person can appear under
+  // several draws, and only the clicked card should open.
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -105,6 +234,7 @@ export function CircleComparison() {
     data && data.entrant_total > 0
       ? Math.round((data.matched.length / data.entrant_total) * 100)
       : 0;
+  const groups = data ? groupByDraw(data) : [];
 
   return (
     <div className="mt-5">
@@ -149,146 +279,81 @@ export function CircleComparison() {
             <StatTile label={`Signed up · Airtable holds ${data.circle_total.toLocaleString()} total`} value={`${pct}%`} />
           </div>
 
-          <section className="mt-8">
-            <h2 className={`text-lg ${heading}`}>
-              Not signed up yet ({data.missing.length})
-            </h2>
-            <p className={`mt-1 text-sm ${metaText}`}>
-              These people consented at an event but aren&apos;t in the
-              Airtable. Click a person for their full details, copy them, and
-              add them to the Circle.
+          {groups.length === 0 && (
+            <p className="mt-8 rounded-xl border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500 dark:border-stone-600 dark:text-stone-400">
+              No event entries yet.
             </p>
-            {data.missing.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500 dark:border-stone-600 dark:text-stone-400">
-                Everyone who entered a draw is in the Circle. 🎉
+          )}
+
+          {groups.map((g) => (
+            <section key={g.title} className="mt-8">
+              <h2 className={`text-lg ${heading}`}>{g.title}</h2>
+              <p className={`mt-0.5 text-sm ${metaText}`}>
+                {g.missing.length + g.matched.length} entrant
+                {g.missing.length + g.matched.length === 1 ? "" : "s"} ·{" "}
+                {g.matched.length} in the Circle ·{" "}
+                <span
+                  className={
+                    g.missing.length > 0
+                      ? "font-semibold text-accent-text dark:text-red-400"
+                      : "font-semibold text-found dark:text-green-300"
+                  }
+                >
+                  {g.missing.length} not signed up
+                </span>
               </p>
-            ) : (
-              <ul className="mt-3 list-none space-y-2">
-                {data.missing.map((p) => {
-                  const open = openEmail === p.email;
-                  return (
-                    <li key={p.email} className={`${card} overflow-hidden`}>
-                      <button
-                        onClick={() => setOpenEmail(open ? null : p.email)}
-                        aria-expanded={open}
-                        className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 text-left hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-maroon-700 dark:hover:bg-stone-800"
-                      >
-                        <span className="min-w-0">
-                          <span className="font-semibold">{p.full_name}</span>
-                          <span className={`ml-2 text-sm ${metaText}`}>
-                            {p.email}
-                          </span>
-                        </span>
-                        <span className={`flex items-center gap-2 text-xs ${metaText}`}>
-                          {p.source === "paper" && (
-                            <span className="rounded border border-stone-300 px-1 py-0.5 font-semibold uppercase dark:border-stone-600">
-                              Paper
-                            </span>
-                          )}
-                          {[p.city, p.province].filter(Boolean).join(", ")}
-                          <span aria-hidden="true">{open ? "▲" : "▼"}</span>
-                        </span>
-                      </button>
 
-                      {open && (
-                        <div className="border-t border-stone-200 px-4 py-4 dark:border-stone-700">
-                          <dl className="grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>Full name</dt>
-                              <dd className="font-medium">{p.full_name}</dd>
-                            </div>
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>Email</dt>
-                              <dd className="break-all font-medium">{p.email}</dd>
-                            </div>
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>City</dt>
-                              <dd className="font-medium">{p.city ?? "—"}</dd>
-                            </div>
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>Province</dt>
-                              <dd className="font-medium">{p.province ?? "—"}</dd>
-                            </div>
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>Event(s)</dt>
-                              <dd className="font-medium">{p.draws.join("; ")}</dd>
-                            </div>
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>Entered</dt>
-                              <dd className="font-medium">
-                                {new Date(p.first_entered_at).toLocaleDateString()}
-                                {p.source === "paper" ? " · paper sheet" : " · online"}
-                              </dd>
-                            </div>
-                            <div className="flex justify-between gap-3 sm:justify-start">
-                              <dt className={`${metaText} sm:w-32`}>Mailing list</dt>
-                              <dd className="font-medium">
-                                {p.mailing_list_consent ? "Opted in" : "No"}
-                              </dd>
-                            </div>
-                          </dl>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <button
-                              onClick={() => copy(detailsBlock(p), p.email)}
-                              className={btnPrimary}
-                            >
-                              {copied === p.email ? "Copied!" : "Copy details"}
-                            </button>
-                            <button
-                              onClick={() => copy(p.email, `${p.email}-mail`)}
-                              className={btnSecondary}
-                            >
-                              {copied === `${p.email}-mail` ? "Copied!" : "Copy email"}
-                            </button>
-                            <a
-                              href={AIRTABLE_URL}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`${btnSecondary} text-center`}
-                            >
-                              Add in Airtable ↗
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-
-          <section className="mt-8">
-            <details>
-              <summary className={`cursor-pointer text-lg ${heading}`}>
-                Already in the Circle ({data.matched.length})
-              </summary>
-              {data.matched.length === 0 ? (
-                <p className={`mt-2 text-sm ${metaText}`}>
-                  None of the event entrants are in the Airtable yet.
+              {g.missing.length === 0 ? (
+                <p className="mt-3 rounded-xl border border-dashed border-stone-300 p-4 text-center text-sm text-stone-500 dark:border-stone-600 dark:text-stone-400">
+                  Everyone from this event is in the Circle. 🎉
                 </p>
               ) : (
-                <ul className="mt-3 list-none space-y-1.5">
-                  {data.matched.map((p) => (
-                    <li
-                      key={p.email}
-                      className="flex flex-wrap items-baseline gap-x-2 text-sm"
-                    >
-                      <span aria-hidden="true" className="text-found dark:text-green-300">✓</span>
-                      <span className="font-semibold">{p.full_name}</span>
-                      <span className={metaText}>{p.email}</span>
-                      {p.circle?.signed_up_at && (
-                        <span className={`text-xs ${metaText}`}>
-                          in Circle since{" "}
-                          {new Date(p.circle.signed_up_at).toLocaleDateString()}
-                        </span>
-                      )}
-                    </li>
-                  ))}
+                <ul className="mt-3 list-none space-y-2">
+                  {g.missing.map((p) => {
+                    const key = `${g.title}:${p.email}`;
+                    return (
+                      <PersonCard
+                        key={key}
+                        p={p}
+                        open={openKey === key}
+                        onToggle={() => setOpenKey(openKey === key ? null : key)}
+                        copied={copied}
+                        onCopy={copy}
+                      />
+                    );
+                  })}
                 </ul>
               )}
-            </details>
-          </section>
+
+              {g.matched.length > 0 && (
+                <details className="mt-3">
+                  <summary
+                    className={`cursor-pointer text-sm font-semibold ${metaText}`}
+                  >
+                    Already in the Circle from this event ({g.matched.length})
+                  </summary>
+                  <ul className="mt-2 list-none space-y-1.5">
+                    {g.matched.map((p) => (
+                      <li
+                        key={`${g.title}:${p.email}`}
+                        className="flex flex-wrap items-baseline gap-x-2 text-sm"
+                      >
+                        <span aria-hidden="true" className="text-found dark:text-green-300">✓</span>
+                        <span className="font-semibold">{p.full_name}</span>
+                        <span className={metaText}>{p.email}</span>
+                        {p.circle?.signed_up_at && (
+                          <span className={`text-xs ${metaText}`}>
+                            in Circle since{" "}
+                            {new Date(p.circle.signed_up_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </section>
+          ))}
         </>
       )}
     </div>
