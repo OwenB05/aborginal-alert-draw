@@ -53,16 +53,40 @@ immediately.
    optional **Mail list** box if they want news, and **sign the row**. The
    consent statement is printed on the sheet, so their signature on paper
    carries the same permission as the online checkbox.
-3. Back online: open the draw → **Enter paper sheet** and type the rows in.
-   It's built to be fast — press Enter after each row, and the city and
-   province stay filled in between rows. Duplicates are flagged and
-   skipped automatically; just keep typing.
+3. Back online, get the rows in one of two ways:
+
+   **a) Type them in** — open the draw → **Enter paper sheet**. Built to be
+   fast: press Enter after each row, and the city and province stay filled
+   in between rows. Duplicates are flagged and skipped automatically.
+
+   **b) Scan them with AI** — open the draw → **Scan sheet with AI**,
+   photograph the sheet (or a stack of cards — up to 6 photos at once), and
+   the AI reads the rows for you. **It is a first draft, not the final
+   word.** Every row lands in a review list you can edit, and anything the
+   AI wasn't confident about is outlined in amber — read those against the
+   paper, especially email addresses. Rows where it couldn't see a signature
+   are flagged and left unticked, because an unsigned row means no consent
+   record. Nothing is saved until you press **Add entries**.
+
+   For a handful of rows, typing is often quicker. Scanning earns its keep
+   on a thick stack.
 4. **Keep the signed paper sheets on file.** They are the consent record
    for those entries.
 
-Paper entries are tagged **Paper** everywhere in the portal, so you can
-always tell them apart from QR entries. If the draw was already closed
-before you got back, reopen it, type the rows in, and close it again.
+Offline entries are tagged in the portal and in the CSV export — **Paper**
+when typed in, **Scanned** when read by AI — so you can always tell them
+apart from QR entries and re-check a scanned name against the paper. If the
+draw was already closed before you got back, reopen it, add the rows, and
+close it again.
+
+### Getting good scans
+
+- Lay the sheet flat and fill the frame; avoid shadows and glare.
+- Straight-on beats an angle. Good light beats a flash.
+- Block capitals scan far better than cursive — worth asking people to
+  print, especially their email address.
+- If a row comes back wrong, just fix it in the review list; you don't need
+  to re-photograph the sheet.
 
 ## 4. Watching entries come in
 
@@ -141,6 +165,10 @@ Worth knowing so you can answer questions at the table:
   not readable from outside the portal, even with the site's public link.
 - Consents are never pre-checked, and the two consents (Circle vs mailing
   list) are separate choices.
+- When you use **Scan sheet with AI**, the photo is sent to Anthropic's API
+  to be read and is not used to train models or kept by the app — only the
+  rows you approve are saved. If you'd rather a sheet never left the
+  building, type it in instead; both routes produce identical entries.
 - Every winner pick is audit-logged; closed draws are locked.
 
 ## Quick reference
@@ -151,6 +179,7 @@ Worth knowing so you can answer questions at the table:
 | Print the QR poster | Draw page → **Print poster** |
 | Take paper sign-ups (no service) | Draw page → **Sign-up sheet** |
 | Type in paper sign-ups | Draw page → **Enter paper sheet** |
+| Scan paper sign-ups with AI | Draw page → **Scan sheet with AI** |
 | See/export entrants | Draw page → list / **Export CSV** |
 | Pick a winner | Draw page → **Close draw** / **Draw winner** |
 | See who's not in the Circle yet | Header → **Circle** |

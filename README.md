@@ -59,6 +59,15 @@ Built with **Next.js (App Router) + Tailwind** on **Vercel**, with
 - Winner selection runs inside the `pick_winner` Postgres function:
   admin-checked, row-locked against double-clicks, uniformly random, and
   audit-logged.
+- **AI sheet scanning** (draw page → Scan sheet with AI): photos of a
+  signed paper sheet or a stack of cards are read by Claude Opus 5 vision in
+  the `scan-sheet` Edge Function, which returns proposed rows plus the
+  fields it was unsure about. Nothing is written automatically — the
+  organizer reviews/corrects every row and the app inserts them with
+  `source='scan'`. Requires an Anthropic API key: either a Supabase secret
+  named `ANTHROPIC_API_KEY`, or a Vault secret named `anthropic_api_key`
+  read through the service-role-only `get_anthropic_key()` (migration 0008).
+  Until one exists the endpoint returns a clear 503.
 - **Compassion Circle Comparison** (portal → Circle): compares event
   entrants against the Airtable "Individuals - Compassion Circle" table,
   matched by email, and lists who still needs signing up (click a person to

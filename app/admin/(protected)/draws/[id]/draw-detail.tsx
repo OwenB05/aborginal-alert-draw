@@ -290,6 +290,12 @@ export function DrawDetail({
             >
               Enter paper sheet
             </Link>
+            <Link
+              href={`/admin/draws/${draw.id}/scan`}
+              className={`${btnSecondary} text-center`}
+            >
+              Scan sheet with AI
+            </Link>
           </div>
 
           {/* Draw history — every winner ever picked, including re-draws. */}
@@ -383,9 +389,9 @@ export function DrawDetail({
                         <p className="truncate font-semibold">
                           <span className={`mr-1.5 ${metaText}`}>{i + 1}.</span>
                           {entry.full_name}
-                          {entry.source === "paper" && (
+                          {entry.source !== "online" && (
                             <span className="ml-1.5 rounded border border-stone-300 px-1 py-0.5 align-middle text-[10px] font-semibold uppercase text-stone-500 dark:border-stone-600 dark:text-stone-400">
-                              Paper
+                              {entry.source === "scan" ? "Scanned" : "Paper"}
                             </span>
                           )}
                         </p>
@@ -474,9 +480,9 @@ export function DrawDetail({
                         <td className={`py-2 pr-3 ${metaText}`}>{i + 1}</td>
                         <td className="py-2 pr-3">
                           {entry.full_name}
-                          {entry.source === "paper" && (
+                          {entry.source !== "online" && (
                             <span className="ml-1.5 rounded border border-stone-300 px-1 py-0.5 text-[10px] font-semibold uppercase text-stone-500 dark:border-stone-600 dark:text-stone-400">
-                              Paper
+                              {entry.source === "scan" ? "Scanned" : "Paper"}
                             </span>
                           )}
                           {entry.id === draw.winner_entry_id && (

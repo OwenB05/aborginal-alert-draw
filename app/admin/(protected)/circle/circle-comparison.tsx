@@ -13,7 +13,7 @@ type Person = {
   city: string | null;
   province: string | null;
   mailing_list_consent: boolean;
-  source: "online" | "paper";
+  source: "online" | "paper" | "scan";
   first_entered_at: string;
   draws: string[];
   entry_count: number;
@@ -87,7 +87,13 @@ function detailsBlock(p: Person): string {
     `City: ${p.city ?? ""}`,
     `Province: ${p.province ?? ""}`,
     `Signed up at event: ${p.draws.join("; ")} (${new Date(p.first_entered_at).toLocaleDateString()})`,
-    `Entry type: ${p.source === "paper" ? "paper sheet (signed on paper)" : "online form (e-signed)"}`,
+    `Entry type: ${
+      p.source === "paper"
+        ? "paper sheet (signed on paper)"
+        : p.source === "scan"
+          ? "scanned paper sheet (signed on paper)"
+          : "online form (e-signed)"
+    }`,
     `Mailing list opt-in: ${p.mailing_list_consent ? "yes" : "no"}`,
   ].join("\n");
 }
@@ -117,9 +123,9 @@ function PersonCard({
           <span className={`ml-2 text-sm ${metaText}`}>{p.email}</span>
         </span>
         <span className={`flex items-center gap-2 text-xs ${metaText}`}>
-          {p.source === "paper" && (
+          {p.source !== "online" && (
             <span className="rounded border border-stone-300 px-1 py-0.5 font-semibold uppercase dark:border-stone-600">
-              Paper
+              {p.source === "scan" ? "Scanned" : "Paper"}
             </span>
           )}
           {[p.city, p.province].filter(Boolean).join(", ")}
@@ -154,7 +160,11 @@ function PersonCard({
               <dt className={`${metaText} sm:w-32`}>Entered</dt>
               <dd className="font-medium">
                 {new Date(p.first_entered_at).toLocaleDateString()}
-                {p.source === "paper" ? " · paper sheet" : " · online"}
+                {p.source === "paper"
+                  ? " · paper sheet"
+                  : p.source === "scan"
+                    ? " · scanned sheet"
+                    : " · online"}
               </dd>
             </div>
             <div className="flex justify-between gap-3 sm:justify-start">

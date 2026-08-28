@@ -46,9 +46,11 @@ export default async function SignUpSheetPage({
 
       <p className="no-print mb-4 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
         Print one or more copies for events without cell service (prints in
-        landscape). Afterwards, type the rows in under{" "}
-        <span className="font-semibold">Enter paper sheet</span> on the draw
-        page, and keep the signed sheets on file — they are the consent record.
+        landscape). Afterwards, either type the rows in under{" "}
+        <span className="font-semibold">Enter paper sheet</span> or photograph
+        the sheet under <span className="font-semibold">Scan sheet with AI</span>{" "}
+        and check what it reads. Keep the signed sheets on file either way —
+        they are the consent record.
       </p>
 
       {/* The sheet is always light — it prints white even in dark mode. */}

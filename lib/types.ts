@@ -48,9 +48,10 @@ export interface Entry {
   consent: boolean;
   /** Optional, separate opt-in to the mailing list (CASL: not pre-checked). */
   mailing_list_consent: boolean;
-  /** 'online' = entrant used the form; 'paper' = organizer transcribed a
-   * signed paper sheet (the sheet itself is the consent record). */
-  source: "online" | "paper";
+  /** 'online' = entrant used the form; 'paper' = organizer typed in a signed
+   * paper sheet; 'scan' = AI read the sheet and an organizer approved the
+   * rows. For both offline kinds the paper itself is the consent record. */
+  source: "online" | "paper" | "scan";
   created_at: string;
 }
 
