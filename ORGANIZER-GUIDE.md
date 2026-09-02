@@ -122,9 +122,12 @@ but that doesn't mean they're in the official Airtable list yet. The
 - **Overall tiles** at the top: unique entrants across all events, how many
   are already in the Airtable, how many are **not signed up yet**, and the
   sign-up percentage.
-- **One row per event** below. Each shows its entrant count and a badge —
-  red "*N not signed up*" or green "*All signed up*" — so you can see at a
-  glance how K Days did versus a conference. Click an event to open it.
+- **Report by event** below — a table with one row per event: how many
+  **signed up for the draw**, how many of those **signed up for the
+  Compassion Circle**, how many **did not**, and the percentage, with an
+  all-events total at the bottom (unique people, so someone who attended two
+  events counts once). **Export report (CSV)** gives you that table as a
+  spreadsheet. Click an event's name to open it.
 - **The event's own page** lists exactly who from that event isn't in the
   Airtable. Click a person for their full record; **Copy details** puts an
   Airtable-ready block on your clipboard (First Name, Email, City,
