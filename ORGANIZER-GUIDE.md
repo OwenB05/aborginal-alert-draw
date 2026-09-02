@@ -117,18 +117,27 @@ test.
 
 Everyone who enters a draw consents to joining the Compassionate Circle —
 but that doesn't mean they're in the official Airtable list yet. The
-**Circle** page in the header checks, live:
+**Circle** page in the header checks, live against Airtable:
 
-- Overall tiles: unique entrants, how many are already in the Airtable, how
-  many are **not signed up yet**, and the sign-up percentage.
-- One section **per event**, newest first, each with its own counts — so
-  you can see how K Days did versus a conference.
-- Click any not-signed-up person to see their full record. **Copy
-  details** puts an Airtable-ready block on your clipboard (First Name,
-  Email, City, Province…); **Add in Airtable ↗** opens the Circle table so
-  you can paste them in. Paper entrants are included automatically.
+- **Overall tiles** at the top: unique entrants across all events, how many
+  are already in the Airtable, how many are **not signed up yet**, and the
+  sign-up percentage.
+- **One row per event** below. Each shows its entrant count and a badge —
+  red "*N not signed up*" or green "*All signed up*" — so you can see at a
+  glance how K Days did versus a conference. Click an event to open it.
+- **The event's own page** lists exactly who from that event isn't in the
+  Airtable. Click a person for their full record; **Copy details** puts an
+  Airtable-ready block on your clipboard (First Name, Email, City,
+  Province…); **Add in Airtable ↗** opens the Circle table so you can paste
+  them in. People already in the Circle are listed underneath, collapsed.
+- **Export** — every event page has two CSV buttons: **Export not signed up**
+  (just the people to add — columns match the Airtable so it can be
+  imported directly) and **Export everyone with Circle status** (the full
+  comparison for that event). The overview page also has **Export all not
+  signed up** across every event.
 
-Use it after every event: open Circle, work through the red list, done.
+Paper and scanned entrants are included automatically. Use it after every
+event: open Circle → the event → export or work through the red list.
 
 ## 7. Adding organizers & password resets
 

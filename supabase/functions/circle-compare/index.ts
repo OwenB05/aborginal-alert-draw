@@ -6,6 +6,9 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // checked against admin_users. The Airtable token lives in Supabase Vault and
 // is fetched via the service-role-only get_airtable_pat() function — it never
 // reaches the browser.
+//
+// Body: { draw_id?: string } — when given, only that draw's entrants are
+// compared (the per-event page); otherwise every entrant (the index page).
 const AIRTABLE_BASE = "app706zGX0j3TMTVp";
 const AIRTABLE_TABLE = "tblxohOAL5RQRmNaJ"; // Individuals - Compassion Circle
 
@@ -23,6 +26,8 @@ function json(status: number, body: unknown) {
   });
 }
 
+type DrawRef = { id: string; title: string };
+
 type Person = {
   full_name: string;
   email: string;
@@ -31,13 +36,21 @@ type Person = {
   mailing_list_consent: boolean;
   source: string;
   first_entered_at: string;
-  draws: string[];
+  draws: DrawRef[];
   entry_count: number;
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json(405, { error: "Method not allowed." });
+
+  let drawId: string | null = null;
+  try {
+    const body = await req.json();
+    if (typeof body?.draw_id === "string" && body.draw_id) drawId = body.draw_id;
+  } catch {
+    // empty body is fine — means "all draws"
+  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 
@@ -109,14 +122,16 @@ Deno.serve(async (req) => {
     offset = page.offset ?? "";
   } while (offset);
 
-  // Every event entry, joined to its draw title (the draws<->entries embed is
-  // disambiguated: entries.draw_id, not the winner FK).
-  const { data: entries, error: entriesError } = await admin
+  // Event entries joined to their draw (id + title). The draws<->entries
+  // embed is disambiguated: entries.draw_id, not the winner FK.
+  let query = admin
     .from("entries")
     .select(
-      "full_name, email, city, province, mailing_list_consent, source, created_at, draw:draws!entries_draw_id_fkey(title)",
+      "full_name, email, city, province, mailing_list_consent, source, created_at, draw:draws!entries_draw_id_fkey(id,title)",
     )
     .order("created_at", { ascending: true });
+  if (drawId) query = query.eq("draw_id", drawId);
+  const { data: entries, error: entriesError } = await query;
   if (entriesError || !entries)
     return json(500, { error: "Could not load event entries." });
 
@@ -124,11 +139,13 @@ Deno.serve(async (req) => {
   const people = new Map<string, Person>();
   for (const e of entries) {
     const key = String(e.email).trim().toLowerCase();
-    const drawTitle =
-      (e.draw as { title?: string } | null)?.title ?? "Unknown draw";
+    const d = e.draw as DrawRef | null;
+    const ref: DrawRef = d
+      ? { id: d.id, title: d.title }
+      : { id: "", title: "Unknown draw" };
     const existing = people.get(key);
     if (existing) {
-      if (!existing.draws.includes(drawTitle)) existing.draws.push(drawTitle);
+      if (!existing.draws.some((x) => x.id === ref.id)) existing.draws.push(ref);
       existing.entry_count++;
       existing.mailing_list_consent ||= e.mailing_list_consent;
       existing.city ||= e.city;
@@ -142,7 +159,7 @@ Deno.serve(async (req) => {
         mailing_list_consent: e.mailing_list_consent,
         source: e.source,
         first_entered_at: e.created_at,
-        draws: [drawTitle],
+        draws: [ref],
         entry_count: 1,
       });
     }
@@ -161,6 +178,7 @@ Deno.serve(async (req) => {
 
   return json(200, {
     fetched_at: new Date().toISOString(),
+    draw_id: drawId,
     circle_total: circleTotal,
     entrant_total: people.size,
     matched,
