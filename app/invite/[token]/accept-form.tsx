@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Captcha } from "@/components/auth/captcha";
+import { captchaEnabled, isCaptchaError } from "@/lib/captcha";
 import { btnPrimary, card, errorText, heading, input, label } from "@/lib/ui";
 
 export function AcceptInviteForm({ token }: { token: string }) {
@@ -11,6 +13,10 @@ export function AcceptInviteForm({ token }: { token: string }) {
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The sign-in that follows goes through Supabase, so it needs a token too
+  // once CAPTCHA protection is enabled.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,12 +64,16 @@ export function AcceptInviteForm({ token }: { token: string }) {
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: data.email as string,
       password,
+      options: { captchaToken: captchaToken ?? undefined },
     });
     setSubmitting(false);
+    setAttempt((n) => n + 1);
 
     if (signInError) {
       setError(
-        "Your password was set, but sign-in failed. Try signing in from the login page."
+        isCaptchaError(signInError.message)
+          ? `Your password was set, but the “I’m human” check didn’t pass. Sign in from the login page.`
+          : "Your password was set, but sign-in failed. Try signing in from the login page."
       );
       return;
     }
@@ -107,6 +117,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
             className={input}
           />
         </div>
+        <Captcha onToken={setCaptchaToken} resetKey={attempt} />
         {error && (
           <p role="alert" className={errorText}>
             {error}
@@ -114,7 +125,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
         )}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || (captchaEnabled() && !captchaToken)}
           className={`${btnPrimary} w-full py-2.5`}
         >
           {submitting ? "Setting up…" : "Set password & sign in"}

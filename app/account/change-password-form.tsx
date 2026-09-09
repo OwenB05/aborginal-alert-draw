@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Captcha } from "@/components/auth/captcha";
+import {
+  CAPTCHA_FAILED_MESSAGE,
+  captchaEnabled,
+  isCaptchaError,
+} from "@/lib/captcha";
 import { btnPrimary, errorText, input, label } from "@/lib/ui";
 
 export function ChangePasswordForm({ email }: { email: string }) {
@@ -12,6 +18,10 @@ export function ChangePasswordForm({ email }: { email: string }) {
   const [message, setMessage] = useState<
     { kind: "success" | "error"; text: string } | null
   >(null);
+  // Verifying the current password is a Supabase sign-in, so it needs a
+  // CAPTCHA token once protection is enabled.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,12 +44,20 @@ export function ChangePasswordForm({ email }: { email: string }) {
     const { error: reauthError } = await supabase.auth.signInWithPassword({
       email,
       password: current,
+      options: { captchaToken: captchaToken ?? undefined },
     });
     if (reauthError) {
       setSubmitting(false);
-      setMessage({ kind: "error", text: "Current password is incorrect." });
+      setAttempt((n) => n + 1);
+      setMessage({
+        kind: "error",
+        text: isCaptchaError(reauthError.message)
+          ? CAPTCHA_FAILED_MESSAGE
+          : "Current password is incorrect.",
+      });
       return;
     }
+    setAttempt((n) => n + 1);
 
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setSubmitting(false);
@@ -101,6 +119,7 @@ export function ChangePasswordForm({ email }: { email: string }) {
           className={input}
         />
       </div>
+      <Captcha onToken={setCaptchaToken} resetKey={attempt} />
       {message && (
         <p
           role={message.kind === "error" ? "alert" : "status"}
@@ -115,7 +134,7 @@ export function ChangePasswordForm({ email }: { email: string }) {
       )}
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || (captchaEnabled() && !captchaToken)}
         className={`${btnPrimary} w-full sm:w-auto`}
       >
         {submitting ? "Saving…" : "Update password"}

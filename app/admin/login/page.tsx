@@ -6,6 +6,12 @@ import { TopNav } from "@/components/layout/top-nav";
 import { SettingsMenu } from "@/components/layout/settings-menu";
 import { Footer } from "@/components/layout/footer";
 import { createClient } from "@/lib/supabase/client";
+import { Captcha } from "@/components/auth/captcha";
+import {
+  CAPTCHA_FAILED_MESSAGE,
+  captchaEnabled,
+  isCaptchaError,
+} from "@/lib/captcha";
 import { btnPrimary, card, errorText, heading, input, label } from "@/lib/ui";
 
 export default function AdminLoginPage() {
@@ -14,6 +20,9 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // CAPTCHA tokens are single-use; `attempt` resets the widget after each try.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,11 +33,19 @@ export default function AdminLoginPage() {
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken: captchaToken ?? undefined },
     });
     setSubmitting(false);
+    setAttempt((n) => n + 1);
 
     if (signInError) {
-      setError("Sign in failed. Check your email and password.");
+      // Distinguish a failed human check from bad credentials, but say
+      // nothing about whether the address exists.
+      setError(
+        isCaptchaError(signInError.message)
+          ? CAPTCHA_FAILED_MESSAGE
+          : "Sign in failed. Check your email and password."
+      );
       return;
     }
     router.push("/admin");
@@ -76,6 +93,7 @@ export default function AdminLoginPage() {
                 className={input}
               />
             </div>
+            <Captcha onToken={setCaptchaToken} resetKey={attempt} />
             {error && (
               <p role="alert" className={errorText}>
                 {error}
@@ -83,7 +101,7 @@ export default function AdminLoginPage() {
             )}
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || (captchaEnabled() && !captchaToken)}
               className={`${btnPrimary} w-full py-2.5`}
             >
               {submitting ? "Signing in…" : "Sign in"}
