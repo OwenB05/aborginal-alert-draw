@@ -6,6 +6,8 @@ import { SettingsMenu } from "@/components/layout/settings-menu";
 import { Footer } from "@/components/layout/footer";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
+import { getMfaStatus, mfaEnrolmentRequired } from "@/lib/mfa";
+import { mfaDecision } from "@/lib/mfa-policy";
 import { btnSecondary, card, heading } from "@/lib/ui";
 
 export default async function AdminLayout({
@@ -52,6 +54,19 @@ export default async function AdminLayout({
       </>
     );
   }
+
+  // Two-step verification. The middleware already challenges anyone who has
+  // an authenticator; this adds the "you must set one up" half, which stays
+  // off until MFA_REQUIRED=on so it can't strand organizers before TOTP is
+  // enabled in Supabase.
+  const mfa = await getMfaStatus();
+  const decision = mfaDecision({
+    enrolled: mfa.enrolled,
+    currentLevel: mfa.currentLevel,
+    enrolmentRequired: mfaEnrolmentRequired(),
+  });
+  if (decision === "enroll") redirect("/mfa/enroll");
+  if (decision === "challenge") redirect("/mfa");
 
   return (
     <>

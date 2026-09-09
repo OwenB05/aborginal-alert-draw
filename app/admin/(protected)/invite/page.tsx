@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateToken } from "@/lib/slug";
 import type { Invite } from "@/lib/types";
+import { Organizers } from "./organizers";
 import {
   btnPrimary,
   btnSecondary,
@@ -229,6 +230,8 @@ export default function InvitePage() {
           )}
         </section>
       </div>
+
+      <Organizers />
     </div>
   );
 }

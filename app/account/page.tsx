@@ -5,6 +5,8 @@ import { SettingsMenu } from "@/components/layout/settings-menu";
 import { Footer } from "@/components/layout/footer";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
+import { getMfaStatus, mfaEnrolmentRequired } from "@/lib/mfa";
+import { MfaCard } from "@/components/account/mfa-card";
 import { card, heading, link, metaText } from "@/lib/ui";
 import { ChangePasswordForm } from "./change-password-form";
 
@@ -25,6 +27,7 @@ export default async function AccountPage() {
     .eq("user_id", user.id)
     .maybeSingle();
   const isOrganizer = !!adminRow;
+  const mfa = await getMfaStatus();
 
   return (
     <>
@@ -70,6 +73,14 @@ export default async function AccountPage() {
               </div>
             )}
           </dl>
+        </div>
+
+        <div className={`mt-4 ${card} p-5`}>
+          <MfaCard
+            enrolled={mfa.enrolled}
+            factorId={mfa.verifiedFactorId}
+            required={isOrganizer && mfaEnrolmentRequired()}
+          />
         </div>
 
         <div className={`mt-4 ${card} p-5`}>
