@@ -32,6 +32,12 @@ Built with **Next.js (App Router) + Tailwind** on **Vercel**, with
 
 ## Security model
 
+See **[SECURITY.md](SECURITY.md)** for the full picture: secret hygiene and
+which secrets are burned, two-step verification, the sign-in CAPTCHA, the
+Canadian data-residency posture, the Supabase dashboard checklist, and the
+rollback for every layer.
+
+
 - All tables use Postgres **row-level security**; the app ships only the
   public (anon) key. There is no service-role key anywhere in the app.
 - The public role can read only a draw's public fields (title, description,

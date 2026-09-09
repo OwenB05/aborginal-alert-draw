@@ -158,7 +158,29 @@ On the **Invitations** page:
 Only existing organizers can create these links, and having a portal
 account alone grants nothing — access comes from the invite.
 
-## 8. Your account & display settings
+## 8. Two-step verification
+
+An extra step at sign-in so a stolen password isn't enough to reach entrant
+information.
+
+- **Turn it on:** Account → **Set up two-step verification**. Install a free
+  authenticator app (Google Authenticator, Microsoft Authenticator,
+  1Password, Authy), scan the QR code — or tap "Can't scan?" and type the
+  setup key — then enter the 6-digit code it shows.
+- **After that:** each time you sign in you'll be asked for the current
+  6-digit code. It changes every 30 seconds; always use the one on screen.
+- **There are no backup codes.** If you lose the phone, another organizer
+  opens **Invitations → Organizers** and clicks **Reset 2-step** next to your
+  name. You then sign in with your password and set it up again.
+- Keep the app on a phone you actually carry, and it's worth having two
+  organizers set up so you're never locked out as a group.
+
+You may also meet an **"I'm human" check** on the sign-in page. Tick it (or
+solve the picture puzzle) before pressing Sign in. If picture puzzles are
+hard to see, hCaptcha offers an accessibility exemption you can register for
+once — ask Owen.
+
+## 9. Your account & display settings
 
 - **Account** (click your email in the header): change your password.
 - **Gear icon** (any page): theme (light/dark/system), text size, font,
@@ -166,7 +188,7 @@ account alone grants nothing — access comes from the invite.
   and are saved per device — handy for reading the portal in bright
   sunlight at an outdoor event (try text size A++ and high contrast).
 
-## 9. Privacy promises baked in
+## 10. Privacy promises baked in
 
 Worth knowing so you can answer questions at the table:
 
@@ -198,4 +220,6 @@ Worth knowing so you can answer questions at the table:
 | Add an organizer | Header → **Invitations** → **Create invite link** |
 | Reset someone's password | Header → **Invitations** → **Send password reset link** |
 | Change my password | Header → your email → **Account** |
+| Turn on two-step verification | Header → your email → **Account** |
+| Reset someone's two-step (lost phone) | Header → **Invitations** → **Organizers** → **Reset 2-step** |
 | Dark mode / bigger text | Header → gear icon |
