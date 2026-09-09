@@ -12,6 +12,10 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // entries table here — the organizer reviews and corrects every row in the
 // portal, and the app inserts them. The model is asked to name the fields it
 // was unsure about (`uncertain_fields`) so the UI can highlight them.
+//
+// Residency: this is the module's only path that sends personal data outside
+// Canada. It is gated on the ai_scanning flag (migration 0009) and documented
+// in SECURITY.md.
 
 const MODEL = "claude-opus-5";
 const MAX_IMAGES = 6;
@@ -193,6 +197,24 @@ Deno.serve(async (req) => {
     .eq("user_id", user.id)
     .maybeSingle();
   if (!adminRow) return json(403, { error: "Organizer access required." });
+
+  // DATA RESIDENCY GATE. Reading a sheet sends a photo containing names,
+  // emails and signatures to Anthropic in the United States, and Claude has
+  // no Canadian-resident inference. That egress is off unless someone has
+  // explicitly enabled it (public.app_flags.ai_scanning) — an absent API key
+  // is not treated as "off" on purpose, so the decision is recorded rather
+  // than incidental.
+  const { data: aiEnabled, error: flagError } = await admin.rpc(
+    "get_app_flag",
+    { p_name: "ai_scanning" },
+  );
+  if (flagError)
+    return json(500, { error: "Could not check the AI scanning setting." });
+  if (aiEnabled !== true)
+    return json(403, {
+      error:
+        "AI scanning is turned off. Reading a sheet sends the photo (names, emails, signatures) to a service in the United States, so it stays off until it is explicitly enabled. Type the sheet in under 'Enter paper sheet' instead.",
+    });
 
   // Key: Supabase secret first, then Vault.
   let apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
