@@ -113,9 +113,15 @@ The database schema lives in `supabase/migrations/0001_init.sql`.
 
 ## Theming
 
-The design tokens follow the Aboriginal Alert design reference (maroon
-scale anchored to `#7a1a1a`, red-dress accent `#e02020` for the feather
-glyph and count badges only, warm `stone` neutrals, Open Sans) and live in
-the `@theme` block of `app/globals.css`. Dark mode is class-based
+The design tokens follow the Aboriginal Alert **Brand Standard v1.0 (July
+2026)**: the burgundy scale is anchored to Oxblood `#631515` (nav bar,
+footer, buttons, links) and Deep Maroon `#5A0C0B` (deepest brand tone); the
+two awareness colours — Red Dress Red `#C90D0E` (women & girls) and Burnt
+Copper `#B05A2C` (men & boys) — appear together at equal weight in the
+`.awareness-band` chrome under the header and above the footer (accent red
+is chrome/badges only, never status); Warm Cream `#F7EFE2` is the light-mode
+page ground and Signal Red `#ED1B24` is reserved for genuine alerts. Warm
+`stone` neutrals and Open Sans are unchanged. Everything lives in the
+`@theme` block of `app/globals.css`. Dark mode is class-based
 (`aau-theme` in localStorage) with a no-flash script in `app/layout.tsx`
 and a toggle in the header.

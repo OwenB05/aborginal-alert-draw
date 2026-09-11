@@ -192,7 +192,7 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
           type="checkbox"
           checked={circleConsent}
           onChange={(e) => setCircleConsent(e.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-[#7a1a1a] dark:accent-[#d09c9c]"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-[#631515] dark:accent-[#cf9b9a]"
         />
         <span>
           <span className="font-semibold">Required:</span> I give Aboriginal
@@ -208,7 +208,7 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
           type="checkbox"
           checked={mailingConsent}
           onChange={(e) => setMailingConsent(e.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-[#7a1a1a] dark:accent-[#d09c9c]"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-[#631515] dark:accent-[#cf9b9a]"
         />
         <span>
           Optional: add me to the Aboriginal Alert mailing list for news and

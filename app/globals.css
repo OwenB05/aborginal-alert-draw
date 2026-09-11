@@ -6,22 +6,37 @@
  * logo. Neutral scale is Tailwind's warm `stone` — never gray/slate.
  */
 @theme {
-  /* Brand maroon scale — anchored to Aboriginal Alert's #7a1a1a / #8a2424 */
-  --color-maroon-50:  #faf4f4;
-  --color-maroon-100: #f3e3e3;
-  --color-maroon-200: #e5c6c6;
-  --color-maroon-300: #d09c9c;
-  --color-maroon-400: #b56666;
-  --color-maroon-500: #9b3a3a;
-  --color-maroon-600: #8a2424;
-  --color-maroon-700: #7a1a1a;   /* primary — header, buttons, links */
-  --color-maroon-800: #621414;
-  --color-maroon-900: #4d1010;   /* headings, footer, deepest chrome */
-  --color-maroon-950: #310808;
+  /* Brand burgundy scale — Brand Standard v1.0 (July 2026). Anchored to the
+     two named brand colours: Oxblood #631515 at 700 (nav bar, footer, section
+     bands, buttons, links) and Deep Maroon #5A0C0B at 900 (wordmark-level
+     primary; deepest text/chrome). The rest of the ramp is derived. */
+  --color-maroon-50:  #faf4f3;
+  --color-maroon-100: #f3e3e2;
+  --color-maroon-200: #e4c6c5;
+  --color-maroon-300: #cf9b9a;
+  --color-maroon-400: #b26262;
+  --color-maroon-500: #963636;
+  --color-maroon-600: #7c2121;
+  --color-maroon-700: #631515;   /* Oxblood — header, footer, buttons, links */
+  --color-maroon-800: #5f1010;
+  --color-maroon-900: #5a0c0b;   /* Deep Maroon — headings, deepest chrome */
+  --color-maroon-950: #300606;
 
-  /* Red-dress accent — brand chrome + notification badges ONLY, never status */
-  --color-accent:      #e02020;
-  --color-accent-text: #c41818;  /* accent used as text (error messages) */
+  /* Awareness colours — the people we stand for. Shown together at equal
+     weight (see the .awareness-band chrome element). Chrome + notification
+     badges ONLY, never status. */
+  --color-accent:      #c90d0e;  /* Red Dress Red — women & girls */
+  --color-accent-text: #c90d0e;  /* accent used as text (error messages) */
+  --color-copper:      #b05a2c;  /* Burnt Copper — men & boys */
+  --color-copper-100:  #f6e6d9;
+  --color-copper-300:  #dda173;
+  --color-copper-700:  #8a441f;
+
+  /* Support colours from the standard. Signal Red is reserved for genuine
+     alerts; cream is the light-mode page ground; charcoal the dark ground. */
+  --color-signal:   #ed1b24;
+  --color-cream:    #f7efe2;
+  --color-charcoal: #2a1516;
 
   /* Classification semantics (fg + bg pairs). */
   --color-found:      #166534;  --color-found-bg:    #f0fdf4;  /* green */
@@ -46,12 +61,24 @@
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-cream);
   color: #1c1917;
 }
 .dark body {
-  background: #141110;
+  background: #1d1112; /* charcoal-derived warm near-black */
   color: #e7e5e4;
+}
+
+/* Awareness band — Red Dress Red (women & girls) and Burnt Copper (men &
+   boys) together at EQUAL weight, per the brand standard. Rendered as chrome
+   under the header and above the footer; purely decorative (aria-hidden). */
+.awareness-band {
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0 50%,
+    var(--color-copper) 50% 100%
+  );
 }
 
 /* ---- Accessibility preference classes (set on <html> by lib/a11y-prefs.ts,
@@ -97,7 +124,7 @@ html.a11y-text-2 {
   --color-stone-500: #44403c; /* muted text: stone-500 → stone-700 */
   --color-stone-600: #292524; /* secondary text: stone-600 → stone-800 */
   --color-noupdate: #404040;
-  --color-maroon-300: #b56666; /* decorative maroon lifts toward readable */
+  --color-maroon-300: #b26262; /* decorative maroon lifts toward readable */
 }
 .a11y-contrast body {
   color: #000000;
@@ -110,7 +137,7 @@ html.a11y-text-2 {
   --color-stone-500: #a8a29e;
   --color-stone-600: #a8a29e;
   --color-stone-700: #78716c;
-  --color-maroon-300: #d09c9c;
+  --color-maroon-300: #cf9b9a;
 }
 .dark.a11y-contrast body {
   background: #000000;

@@ -166,7 +166,7 @@ export function PaperEntryForm({ drawId }: { drawId: string }) {
             type="checkbox"
             checked={mailingList}
             onChange={(e) => setMailingList(e.target.checked)}
-            className="h-4 w-4 accent-[#7a1a1a] dark:accent-[#d09c9c]"
+            className="h-4 w-4 accent-[#631515] dark:accent-[#cf9b9a]"
           />
           &ldquo;Mail list&rdquo; box is checked on the sheet
         </label>

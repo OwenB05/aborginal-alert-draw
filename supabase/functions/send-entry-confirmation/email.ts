@@ -34,22 +34,28 @@ type HtmlOptions = {
 // styles, no images, the maroon from the site. Every string passes through
 // escapeHtml, so titles and addresses can't break out of the markup.
 export function renderHtml(o: HtmlOptions): string {
-  const body = "font-size:16px;line-height:1.5;color:#292524";
+  const body = "font-size:16px;line-height:1.5;color:#2a1516";
   const fine = "font-size:13px;line-height:1.5;color:#57534e";
   const paragraphs = o.paragraphs
     .map((t) => `<p style='margin:0 0 16px;${body}'>${escapeHtml(t)}</p>`)
     .join("");
   const cta = o.cta
-    ? `<p style='margin:24px 0'><a href='${escapeHtml(o.cta.url)}' style='display:inline-block;background:#7a1a1a;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:8px'>${escapeHtml(o.cta.label)}</a></p>` +
-      `<p style='margin:0 0 16px;${fine}'>If the button doesn't work, copy this address into your browser:<br><a href='${escapeHtml(o.cta.url)}' style='color:#7a1a1a;word-break:break-all'>${escapeHtml(o.cta.url)}</a></p>`
+    ? `<p style='margin:24px 0'><a href='${escapeHtml(o.cta.url)}' style='display:inline-block;background:#631515;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:8px'>${escapeHtml(o.cta.label)}</a></p>` +
+      `<p style='margin:0 0 16px;${fine}'>If the button doesn't work, copy this address into your browser:<br><a href='${escapeHtml(o.cta.url)}' style='color:#631515;word-break:break-all'>${escapeHtml(o.cta.url)}</a></p>`
     : "";
   const small = (o.small ?? [])
     .map((t) => `<p style='margin:0 0 8px;${fine}'>${escapeHtml(t)}</p>`)
     .join("");
-  return `<!doctype html><html><body style='margin:0;padding:24px;background:#f5f5f4;font-family:Arial,Helvetica,sans-serif'>` +
-    `<div style='max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e7e5e4;border-radius:12px;overflow:hidden'>` +
-    `<div style='background:#7a1a1a;color:#ffffff;padding:14px 24px;font-weight:700;font-size:15px'>Aboriginal Alert Events</div>` +
-    `<div style='padding:24px'><h1 style='margin:0 0 16px;font-size:22px;line-height:1.3;color:#7a1a1a'>${escapeHtml(o.heading)}</h1>` +
+  return `<!doctype html><html><body style='margin:0;padding:24px;background:#f7efe2;font-family:Arial,Helvetica,sans-serif'>` +
+    `<div style='max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e8dcc8;border-radius:12px;overflow:hidden'>` +
+    `<div style='background:#5a0c0b;color:#ffffff;padding:14px 24px;font-weight:700;font-size:15px'>Aboriginal Alert Events</div>` +
+    // Awareness colours at equal weight (table cells: gradients don't survive
+    // Outlook). Red Dress Red — women & girls; Burnt Copper — men & boys.
+    `<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse'><tr>` +
+    `<td width='50%' height='4' style='background:#c90d0e;font-size:0;line-height:0'>&nbsp;</td>` +
+    `<td width='50%' height='4' style='background:#b05a2c;font-size:0;line-height:0'>&nbsp;</td>` +
+    `</tr></table>` +
+    `<div style='padding:24px'><h1 style='margin:0 0 16px;font-size:22px;line-height:1.3;color:#5a0c0b'>${escapeHtml(o.heading)}</h1>` +
     `${paragraphs}${cta}${small}</div></div></body></html>`;
 }
 

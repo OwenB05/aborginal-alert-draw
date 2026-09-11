@@ -329,7 +329,7 @@ export function ScanSheetForm({ drawId }: { drawId: string }) {
                       onChange={(e) =>
                         update(r.key, { include: e.target.checked })
                       }
-                      className="h-4 w-4 accent-[#7a1a1a] dark:accent-[#d09c9c]"
+                      className="h-4 w-4 accent-[#631515] dark:accent-[#cf9b9a]"
                     />
                     Add this person
                   </label>
@@ -423,7 +423,7 @@ export function ScanSheetForm({ drawId }: { drawId: string }) {
                     onChange={(e) =>
                       update(r.key, { mailing_list_consent: e.target.checked })
                     }
-                    className="h-4 w-4 accent-[#7a1a1a] dark:accent-[#d09c9c]"
+                    className="h-4 w-4 accent-[#631515] dark:accent-[#cf9b9a]"
                   />
                   Mailing-list box ticked on the sheet
                   {isFlagged(r, "mailing_list_consent") ? " · check" : ""}

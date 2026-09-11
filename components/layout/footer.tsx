@@ -1,6 +1,7 @@
 export function Footer() {
   return (
-    <footer className="no-print mt-12 bg-maroon-900 text-maroon-200">
+    <footer className="no-print mt-12 bg-maroon-700 text-maroon-200">
+      <div aria-hidden="true" className="awareness-band" />
       <div className="mx-auto w-full max-w-7xl px-4 py-8 text-sm sm:px-6">
         <p>
           Community draw platform inspired by{" "}

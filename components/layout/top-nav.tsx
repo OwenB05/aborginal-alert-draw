@@ -30,6 +30,9 @@ export function TopNav({
           {children}
         </nav>
       </div>
+      {/* Awareness colours at equal weight: Red Dress Red (women & girls) +
+          Burnt Copper (men & boys) — brand standard. */}
+      <div aria-hidden="true" className="awareness-band" />
     </header>
   );
 }
