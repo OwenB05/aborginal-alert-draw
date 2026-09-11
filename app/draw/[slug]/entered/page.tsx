@@ -38,6 +38,10 @@ export default async function EnteredPage({
             has been recorded. If you win, you&apos;ll be contacted at the
             email you provided.
           </p>
+          <p className={`mt-3 ${bodyText}`}>
+            A confirmation email is on its way — check your junk folder if it
+            doesn&apos;t show up.
+          </p>
           <p className="mt-6 text-sm text-stone-500 dark:text-stone-400">
             Good luck — you can close this page now.
           </p>

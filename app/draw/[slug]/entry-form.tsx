@@ -69,6 +69,14 @@ export function EntryForm({ drawId, slug }: { drawId: string; slug: string }) {
       return;
     }
 
+    // Confirmation email — best effort and never in the entrant's way. The
+    // function only sends if the entry exists and hasn't been confirmed yet.
+    void supabase.functions
+      .invoke("send-entry-confirmation", {
+        body: { draw_id: drawId, email: email.trim() },
+      })
+      .catch(() => undefined);
+
     router.push(`/draw/${slug}/entered`);
   }
 

@@ -80,4 +80,6 @@ export interface Invite {
   created_at: string;
   expires_at: string;
   accepted_at: string | null;
+  /** When the link was last emailed by send-invite (null = not yet). */
+  emailed_at: string | null;
 }

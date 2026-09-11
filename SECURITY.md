@@ -21,7 +21,7 @@ order, and each has a rollback that needs no deploy.
 | Sign-in CAPTCHA | **Code live, no keys set** | Supabase Attack Protection verifies the token |
 | Canadian compute | **On** | `vercel.json` → `yul1` (Montréal) |
 | AI egress gate | **Off by default** | `app_flags.ai_scanning` read inside `scan-sheet` |
-| Email delivery | **Not built** | needs a rotated Resend key (see below) |
+| Email delivery | **On** — invite/reset links, entry confirmations | `send-invite` / `send-entry-confirmation` Edge Functions; key in Vault |
 
 ---
 
@@ -33,7 +33,7 @@ therefore compromised:
 
 | Secret | Status | Rotate via |
 |---|---|---|
-| Resend API key (`re_…`) | **BURNED — rotate before use** | Resend → API Keys → revoke + create |
+| Resend API key (`re_…`) | **BURNED — currently live in Vault; rotate** | Resend → API Keys → revoke + create, then `vault.update_secret` (§4) |
 | Airtable PAT (`pat…`) | **BURNED — rotate; currently live in Vault** | airtable.com/create/tokens → delete + recreate |
 | Initial organizer password | **Should be changed** | `/account` → Password |
 | Supabase service-role key | Clean — never in chat | only if that changes |
@@ -47,6 +47,7 @@ can read them and the browser cannot:
 
 - `airtable_pat` → `get_airtable_pat()` (migration 0006)
 - `anthropic_api_key` → `get_anthropic_key()` (migration 0008) — not yet set
+- `resend_api_key` → `get_resend_key()` (migration 0011)
 
 To rotate a Vault secret without a deploy:
 `select vault.update_secret(id, '<new value>')` on that row.
@@ -166,11 +167,56 @@ redact before egress.
 - Airtable (the Compassion Circle list) is US-hosted; the Circle comparison
   reads it and sends entrant emails for matching.
 - `aboriginalalert.ca` itself is hosted outside Four Winds' control.
-- Once email is built, recipients' addresses transit Resend (US).
+- Email transits Resend (US): the recipient address, the draw title and
+  prize, and — for invites — the one-time link itself.
 
 ---
 
-## 4. Supabase dashboard checklist
+## 4. Email delivery (Resend)
+
+**Built and on.** Two kinds of message, nothing else:
+
+- **Invite and password-reset links** — `send-invite` Edge Function.
+  Organizer-only (JWT verified, then `admin_users`). Emails the one-time link
+  on an existing `invites` row and stamps `emailed_at`. The link's origin is
+  taken from the portal the organizer is using, but only our own https hosts
+  (or localhost) are honoured — anything else falls back to production, so
+  the request body cannot point the link at another site. The Invitations
+  page still shows and copies the link, so a bounced or missing email is
+  never a dead end.
+- **Entry confirmations** — `send-entry-confirmation` Edge Function, called
+  by the public form right after a successful insert. It is anonymous, so it
+  trusts nothing in the request: `claim_entry_confirmation()` (migration
+  0012) atomically flips `entries.confirmation_sent_at` from null, and only
+  the caller that wins the flip sends — one message per entry, ever. The
+  response is `{ ok: true }` whether or not anything matched, so it cannot
+  be used to learn which addresses have entered. The message carries the
+  draw title, prize and the permissions given; no name, no link.
+
+**Not sent:** winner notifications. The organizer contacts the winner (their
+email is on the draw page) — an automated message that bounces or lands in
+junk is the worst place for that conversation to fail.
+
+The API key lives in Vault (`resend_api_key` → `get_resend_key()`, migration
+0011), read only by those two functions. **The key currently in Vault was
+pasted in chat and is burned** — rotate it (Resend → API Keys → revoke +
+create) and `select vault.update_secret(id, '<new key>')` on that row. No
+deploy.
+
+The sender is `Aboriginal Alert Events <noreply@aboriginalalert.ca>`, which
+needs `aboriginalalert.ca` verified in Resend (resend.com/domains → add the
+DNS records it gives you). Until then Resend refuses every send: the
+Invitations page shows the refusal word for word under the link, and
+entrants simply get no email. To send from a different address without a
+deploy, set an `EMAIL_FROM` secret on the Edge Functions.
+
+**Rollback:** `delete from vault.secrets where name = 'resend_api_key';` —
+`send-invite` then answers "email isn't set up" and the page falls back to
+copy-and-send; confirmations stop quietly. Instant, no deploy.
+
+---
+
+## 5. Supabase dashboard checklist
 
 - Authentication → **Sign In / Providers** → *Allow new users to sign up*
   **OFF** (this module is invite-only; a self-signup grants nothing, but
@@ -186,13 +232,14 @@ redact before egress.
 
 ---
 
-## 5. Deviations from the shared guide
+## 6. Deviations from the shared guide
 
 Recorded so nobody assumes parity with the Uploader:
 
-- **No email layer yet.** Part 1 is unbuilt because the Resend key was burned
-  in chat and needs rotating. Invite and password-reset links are copied and
-  sent by hand today.
+- **Email is narrower than the guide's.** Invite/reset links and entry
+  confirmations only — no winner notifications, no notification queue, no
+  templates table. The key in Vault is the burned one until it is rotated
+  (§4).
 - **No general audit table.** This module logs winner picks (`winner_log`)
   and nothing else; there is no `AUDIT_ACTIONS` map. MFA enrol/unenrol and
   resets are not audited.

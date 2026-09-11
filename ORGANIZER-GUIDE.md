@@ -42,8 +42,9 @@ Scanning the QR opens the entry form. They fill in:
   until they tick it.
 - **Optional** mailing-list opt-in (never pre-checked)
 
-They get a confirmation screen, and their entry appears on your draw page
-immediately.
+They get a confirmation screen and a short confirmation email (the event
+name, the prize, and the permissions they ticked — no link to click), and
+their entry appears on your draw page immediately.
 
 ## 3. Events without cell service (paper sheets)
 
@@ -146,14 +147,20 @@ event: open Circle → the event → export or work through the red list.
 
 On the **Invitations** page:
 
-- **Invite an organizer:** enter their email → **Create invite link** →
-  copy the one-time link and send it to them. They open it, set a
-  password, and land in the portal with full organizer access. Links
-  expire after 7 days and can be revoked while pending.
+- **Invite an organizer:** enter their email → **Create and email
+  invite**. The one-time link is emailed to them automatically and also
+  appears in the list on the right, where **Copy link** lets you send it
+  another way and **Resend email** covers a missing message (ask them to
+  check junk first). They open it, set a password, and land in the portal
+  with full organizer access. Links expire after 7 days and can be revoked
+  while pending.
 - **Password reset:** if an organizer is locked out, enter their email →
-  **Send password reset link** → copy and send it. Opening it lets them
+  **Send password reset link**. Same mechanics: emailed automatically,
+  listed on the right with Copy link / Resend email. Opening it lets them
   set a new password (old one stops working). Reset links are also
   one-time and 7-day.
+- **If the page says the email couldn't be sent,** the link still exists —
+  copy it and send it yourself, and pass the message shown on to Owen.
 
 Only existing organizers can create these links, and having a portal
 account alone grants nothing — access comes from the invite.
@@ -199,6 +206,9 @@ Worth knowing so you can answer questions at the table:
   not readable from outside the portal, even with the site's public link.
 - Consents are never pre-checked, and the two consents (Circle vs mailing
   list) are separate choices.
+- Confirmation emails to entrants carry the event name, prize and the
+  permissions they ticked — never their name, never a link — and go out
+  once per entry.
 - When you use **Scan sheet with AI**, the photo is sent to Anthropic's API
   to be read and is not used to train models or kept by the app — only the
   rows you approve are saved. If you'd rather a sheet never left the
@@ -219,6 +229,7 @@ Worth knowing so you can answer questions at the table:
 | See who's not in the Circle yet | Header → **Circle** |
 | Add an organizer | Header → **Invitations** → **Create invite link** |
 | Reset someone's password | Header → **Invitations** → **Send password reset link** |
+| Re-send an invite or reset email | Header → **Invitations** → **Resend email** beside the pending link |
 | Change my password | Header → your email → **Account** |
 | Turn on two-step verification | Header → your email → **Account** |
 | Reset someone's two-step (lost phone) | Header → **Invitations** → **Organizers** → **Reset 2-step** |

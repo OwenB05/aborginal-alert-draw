@@ -74,6 +74,15 @@ rollback for every layer.
   named `ANTHROPIC_API_KEY`, or a Vault secret named `anthropic_api_key`
   read through the service-role-only `get_anthropic_key()` (migration 0008).
   Until one exists the endpoint returns a clear 503.
+- **Email** (Resend): `send-invite` emails invite and password-reset links
+  (organizer-only; stamps `invites.emailed_at`) and `send-entry-confirmation`
+  sends entrants a one-time confirmation after the public form. The latter is
+  anonymous, so `claim_entry_confirmation()` in the database (migration 0012)
+  decides whether anything goes out — one per entry, only for entries that
+  exist. The API key is the Vault secret `resend_api_key`, read through the
+  service-role-only `get_resend_key()` (migration 0011). The sender is
+  `noreply@aboriginalalert.ca`, so that domain must be verified in Resend;
+  an `EMAIL_FROM` function secret overrides it.
 - **Compassion Circle Comparison** (portal → Circle): compares event
   entrants against the Airtable "Individuals - Compassion Circle" table,
   matched by email, and lists who still needs signing up (click a person to

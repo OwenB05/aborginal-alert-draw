@@ -29,18 +29,49 @@ function statusOf(inv: Invite): "accepted" | "expired" | "pending" {
   return "pending";
 }
 
+type Notice = { kind: "ok" | "warn"; text: string };
+
+/** Asks the send-invite Edge Function to email the link on an invite row.
+ * Resolves to null when it went out, otherwise to the reason it didn't. */
+async function emailInvite(id: string): Promise<string | null> {
+  const supabase = createClient();
+  const { data, error: fnError } = await supabase.functions.invoke(
+    "send-invite",
+    { body: { id, origin: window.location.origin } }
+  );
+  if (!fnError && data?.ok) return null;
+
+  let reason = "the email service didn't respond";
+  try {
+    const ctx = (fnError as { context?: Response } | null)?.context;
+    if (ctx) {
+      const body = await ctx.json();
+      if (body?.error) reason = body.error;
+    } else if (data?.error) {
+      reason = data.error as string;
+    }
+  } catch {
+    // keep the generic reason
+  }
+  return reason;
+}
+
 export default function InvitePage() {
   const [email, setEmail] = useState("");
   const [invites, setInvites] = useState<Invite[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [emailingId, setEmailingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase
       .from("invites")
-      .select("id, email, token, purpose, created_at, expires_at, accepted_at")
+      .select(
+        "id, email, token, purpose, created_at, expires_at, accepted_at, emailed_at"
+      )
       .order("created_at", { ascending: false })
       .returns<Invite[]>();
     if (data) setInvites(data);
@@ -52,30 +83,68 @@ export default function InvitePage() {
 
   // One mechanic, two labels: an "invite" grants access to someone new; a
   // "reset" lets an existing organizer choose a new password via the same
-  // one-time link.
+  // one-time link. The row is created first and the email is a convenience
+  // on top of it — a delivery problem is reported, not treated as failure,
+  // because the link is still right there to copy.
   async function createLink(purpose: "invite" | "reset") {
     setError(null);
+    setNotice(null);
     setSubmitting(true);
 
+    const to = email.trim().toLowerCase();
     const supabase = createClient();
-    const { error: insertError } = await supabase.from("invites").insert({
-      email: email.trim().toLowerCase(),
-      token: generateToken(),
-      purpose,
-    });
-    setSubmitting(false);
+    const { data: created, error: insertError } = await supabase
+      .from("invites")
+      .insert({ email: to, token: generateToken(), purpose })
+      .select("id")
+      .single();
 
-    if (insertError) {
+    if (insertError || !created) {
+      setSubmitting(false);
       setError("Could not create the link. Please try again.");
       return;
     }
     setEmail("");
+    await load();
+
+    const failure = await emailInvite(created.id);
+    setSubmitting(false);
+    if (failure) {
+      setNotice({
+        kind: "warn",
+        text: `Link created for ${to}, but the email couldn't be sent (${failure}). Copy the link from the list and send it yourself.`,
+      });
+      return;
+    }
+    setNotice({
+      kind: "ok",
+      text:
+        purpose === "reset"
+          ? `Password reset link emailed to ${to}.`
+          : `Invitation emailed to ${to}.`,
+    });
     load();
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     createLink("invite");
+  }
+
+  async function resendEmail(inv: Invite) {
+    setNotice(null);
+    setEmailingId(inv.id);
+    const failure = await emailInvite(inv.id);
+    setEmailingId(null);
+    if (failure) {
+      setNotice({
+        kind: "warn",
+        text: `The email to ${inv.email} couldn't be sent (${failure}).`,
+      });
+      return;
+    }
+    setNotice({ kind: "ok", text: `Emailed ${inv.email}.` });
+    load();
   }
 
   async function copyLink(inv: Invite) {
@@ -108,8 +177,9 @@ export default function InvitePage() {
         <section className={`${card} p-5`}>
           <h1 className={`text-xl ${heading}`}>Invite an organizer</h1>
           <p className={`mt-1 text-sm ${metaText}`}>
-            Create a one-time link for someone to set their password and get
-            organizer access. Send it to the email you enter below.
+            Enter someone&apos;s email and they&apos;ll be sent a one-time link
+            to set their password and get organizer access. The link also
+            appears in the list, so you can copy and send it yourself.
           </p>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
@@ -137,7 +207,7 @@ export default function InvitePage() {
               disabled={submitting}
               className={`${btnPrimary} w-full`}
             >
-              {submitting ? "Creating…" : "Create invite link"}
+              {submitting ? "Sending…" : "Create and email invite"}
             </button>
             <button
               type="button"
@@ -149,14 +219,26 @@ export default function InvitePage() {
             </button>
             <p className={`text-xs ${metaText}`}>
               Password reset: for an existing organizer who&apos;s locked out.
-              It creates a one-time link (listed on the right) — copy it and
-              send it to them; opening it lets them set a new password.
+              It emails them a one-time link (also listed on the right);
+              opening it lets them set a new password.
             </p>
           </form>
         </section>
 
         <section>
           <h2 className={`text-lg ${heading}`}>Invitations</h2>
+          {notice && (
+            <p
+              role="status"
+              className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
+                notice.kind === "ok"
+                  ? "border-found/40 bg-found-bg text-found dark:border-green-400/40 dark:bg-green-400/20 dark:text-green-300"
+                  : "border-amber-400/60 bg-amber-50 text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-200"
+              }`}
+            >
+              {notice.text}
+            </p>
+          )}
           {!invites.length ? (
             <p className="mt-3 rounded-xl border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500 dark:border-stone-600 dark:text-stone-400">
               No invitations yet.
@@ -185,6 +267,10 @@ export default function InvitePage() {
                             : status === "expired"
                               ? `Expired ${new Date(inv.expires_at).toLocaleDateString()}`
                               : `Expires ${new Date(inv.expires_at).toLocaleDateString()}`}
+                          {status === "pending" &&
+                            (inv.emailed_at
+                              ? ` · Emailed ${new Date(inv.emailed_at).toLocaleString()}`
+                              : " · Not emailed yet")}
                         </p>
                       </div>
                       <span
@@ -209,6 +295,17 @@ export default function InvitePage() {
                         <code className="min-w-0 flex-1 truncate rounded-lg bg-stone-50 px-2 py-1.5 text-xs text-stone-500 dark:bg-stone-800 dark:text-stone-400">
                           {inviteUrl(inv.token)}
                         </code>
+                        <button
+                          onClick={() => resendEmail(inv)}
+                          disabled={emailingId === inv.id}
+                          className={`${btnSecondary} px-3 py-1.5`}
+                        >
+                          {emailingId === inv.id
+                            ? "Sending…"
+                            : inv.emailed_at
+                              ? "Resend email"
+                              : "Email link"}
+                        </button>
                         <button
                           onClick={() => copyLink(inv)}
                           className={`${btnSecondary} px-3 py-1.5`}
