@@ -28,12 +28,12 @@ order, and each has a rollback that needs no deploy.
 ## 0. Secret hygiene — read this first
 
 **Anything that has ever appeared in a chat transcript is burned and must be
-rotated.** Two secrets were pasted into this project's conversation and are
-therefore compromised:
+rotated.** Two secrets were pasted into this project's conversation; one has
+since been rotated, one has not:
 
 | Secret | Status | Rotate via |
 |---|---|---|
-| Resend API key (`re_…`) | **BURNED — currently live in Vault; rotate** | Resend → API Keys → revoke + create, then `vault.update_secret` (§4) |
+| Resend API key (`re_…`) | **Rotated 2026-09-11** — pasted key revoked in Resend (probe returns 400); new key exists only in Vault | Resend → API Keys → create new, `vault.update_secret`, delete old (§4) |
 | Airtable PAT (`pat…`) | **BURNED — rotate; currently live in Vault** | airtable.com/create/tokens → delete + recreate |
 | Initial organizer password | **Should be changed** | `/account` → Password |
 | Supabase service-role key | Clean — never in chat | only if that changes |
@@ -198,10 +198,13 @@ email is on the draw page) — an automated message that bounces or lands in
 junk is the worst place for that conversation to fail.
 
 The API key lives in Vault (`resend_api_key` → `get_resend_key()`, migration
-0011), read only by those two functions. **The key currently in Vault was
-pasted in chat and is burned** — rotate it (Resend → API Keys → revoke +
-create) and `select vault.update_secret(id, '<new key>')` on that row. No
-deploy.
+0011), read only by those two functions. The first key was pasted in chat and
+has since been **rotated (2026-09-11)**: the new key exists only in Vault and
+the pasted one is revoked in Resend. To rotate again: Resend → API Keys →
+create the new key; in the Supabase SQL Editor run
+`select vault.update_secret(id, '<new key>')` on that row; then delete the
+old key in Resend and confirm it is refused. No deploy — the functions read
+Vault on every send.
 
 The sender is `Aboriginal Alert Events <noreply@aboriginalalert.ca>`, which
 needs `aboriginalalert.ca` verified in Resend (resend.com/domains → add the
@@ -238,8 +241,7 @@ Recorded so nobody assumes parity with the Uploader:
 
 - **Email is narrower than the guide's.** Invite/reset links and entry
   confirmations only — no winner notifications, no notification queue, no
-  templates table. The key in Vault is the burned one until it is rotated
-  (§4).
+  templates table.
 - **No general audit table.** This module logs winner picks (`winner_log`)
   and nothing else; there is no `AUDIT_ACTIONS` map. MFA enrol/unenrol and
   resets are not audited.
