@@ -17,8 +17,8 @@ order, and each has a rollback that needs no deploy.
 |---|---|---|
 | RLS on every table | **On** | Postgres policies; the app ships only the publishable key |
 | Organizer allowlist | **On** | `admin_users`; never writable through the public API |
-| Two-step verification (TOTP) | **Code live, enrolment optional** | `middleware.ts` choke point + `/mfa*` |
-| Sign-in CAPTCHA | **Code live, no keys set** | Supabase Attack Protection verifies the token |
+| Two-step verification (TOTP) | **On; 1 of 4 organizers enrolled (2026-09-28)**, enrolment not yet mandatory | `middleware.ts` choke point + `/mfa*` |
+| Sign-in CAPTCHA | **On (Turnstile), verified 2026-09-28** — token-less sign-ins refused; organizers have signed in through it | Supabase Attack Protection verifies the token |
 | Canadian compute | **On** | `vercel.json` → `yul1` (Montréal) |
 | AI egress gate | **Off by default** | `app_flags.ai_scanning` read inside `scan-sheet` |
 | Email delivery | **On** — invite/reset links, entry confirmations | `send-invite` / `send-entry-confirmation` Edge Functions; key in Vault |
