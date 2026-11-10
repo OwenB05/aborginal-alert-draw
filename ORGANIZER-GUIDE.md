@@ -209,8 +209,8 @@ Worth knowing so you can answer questions at the table:
 - Confirmation emails to entrants carry the event name, prize and the
   permissions they ticked — never their name, never a link — and go out
   once per entry.
-- When you use **Scan sheet with AI**, the photo is sent to Anthropic's API
-  in the United States to be read. It is not used to train models or kept by
+- When you use **Scan sheet with AI**, the photo is sent through Vercel's AI
+  Gateway to Anthropic in the United States to be read. It is not used to train models or kept by
   the app — only the rows you approve are saved. If you'd rather a sheet never left the
   building, type it in instead; both routes produce identical entries.
 - Every winner pick is audit-logged; closed draws are locked.

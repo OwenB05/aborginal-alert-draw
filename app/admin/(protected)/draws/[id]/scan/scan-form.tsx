@@ -14,16 +14,25 @@ import {
   metaText,
 } from "@/lib/ui";
 
-// Photograph a signed paper sheet / stack of cards, let the scan-sheet Edge
-// Function read it, then review and correct every row before anything is
+// Photograph a signed paper sheet / stack of cards, let /api/scan-sheet read
+// it (Vercel AI Gateway), then review and correct every row before anything is
 // written. Rows are inserted with source='scan' so AI-read entries stay
 // distinguishable from hand-typed ones. Nothing is auto-saved: handwriting
 // recognition is a first draft and the organizer is the check on it.
 
-/** Long edge sent to the model. Anthropic downscales past ~1568px anyway, so
+/** Long edge sent to the model. The model downscales past ~1568px anyway, so
  * anything larger is wasted upload on a phone tether. */
 const MAX_EDGE = 1600;
 const MAX_PHOTOS = 6;
+/** Vercel caps a request at 4.5 MB. Stay under the route's own 4.2M-char
+ * limit with room to spare; photos are re-encoded smaller until they fit. */
+const UPLOAD_BUDGET = 3_900_000;
+const ENCODINGS: { edge: number; quality: number }[] = [
+  { edge: MAX_EDGE, quality: 0.85 },
+  { edge: MAX_EDGE, quality: 0.72 },
+  { edge: 1400, quality: 0.65 },
+  { edge: 1200, quality: 0.6 },
+];
 
 type ScannedRow = {
   full_name: string;
@@ -45,14 +54,16 @@ type Outcome = {
 };
 
 async function fileToBase64Jpeg(
-  file: File
+  file: File,
+  maxEdge: number,
+  quality: number
 ): Promise<{ media_type: string; data: string }> {
   const bitmap = await createImageBitmap(file, {
     imageOrientation: "from-image",
   });
   const scale = Math.min(
     1,
-    MAX_EDGE / Math.max(bitmap.width, bitmap.height)
+    maxEdge / Math.max(bitmap.width, bitmap.height)
   );
   const w = Math.max(1, Math.round(bitmap.width * scale));
   const h = Math.max(1, Math.round(bitmap.height * scale));
@@ -63,8 +74,23 @@ async function fileToBase64Jpeg(
   if (!ctx) throw new Error("Could not process that photo.");
   ctx.drawImage(bitmap, 0, 0, w, h);
   bitmap.close?.();
-  const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+  const dataUrl = canvas.toDataURL("image/jpeg", quality);
   return { media_type: "image/jpeg", data: dataUrl.split(",")[1] ?? "" };
+}
+
+/** Encodes every photo, stepping down size/quality until the whole batch
+ * fits one upload. Null if even the smallest setting is too big. */
+async function encodeWithinBudget(
+  files: File[]
+): Promise<{ media_type: string; data: string }[] | null> {
+  for (const { edge, quality } of ENCODINGS) {
+    const images = await Promise.all(
+      files.map((f) => fileToBase64Jpeg(f, edge, quality))
+    );
+    const total = images.reduce((n, img) => n + img.data.length, 0);
+    if (total <= UPLOAD_BUDGET) return images;
+  }
+  return null;
 }
 
 function isFlagged(row: ReviewRow, field: string): boolean {
@@ -103,27 +129,38 @@ export function ScanSheetForm({ drawId }: { drawId: string }) {
     setOutcome(null);
     setScanning(true);
     try {
-      const images = await Promise.all(photos.map(fileToBase64Jpeg));
-      const supabase = createClient();
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "scan-sheet",
-        { body: { images } }
-      );
-      if (fnError || !data || data.error) {
-        // The function returns a specific message; surface it as-is.
-        let message =
-          (data?.error as string) ??
-          "Couldn't read that photo. Try again with a clearer, straight-on shot.";
-        try {
-          const ctx = (fnError as { context?: Response } | null)?.context;
-          if (ctx) {
-            const body = await ctx.json();
-            if (body?.error) message = body.error;
-          }
-        } catch {
-          // keep the message we have
-        }
-        setError(message);
+      const images = await encodeWithinBudget(photos);
+      if (!images) {
+        setError(
+          "Those photos are too large to send together. Scan fewer at a time."
+        );
+        return;
+      }
+      let res: Response;
+      try {
+        res = await fetch("/api/scan-sheet", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ images }),
+        });
+      } catch {
+        setError(
+          "Couldn't reach the scanner. Check your connection and try again."
+        );
+        return;
+      }
+      // The route answers JSON; the platform's own errors (upload too big,
+      // timeout) may not be, so fall back to a plain message.
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.error) {
+        setError(
+          (typeof data?.error === "string" && data.error) ||
+            (res.status === 413
+              ? "Those photos are too large to send together. Scan fewer at a time."
+              : res.status === 504
+                ? "Reading the sheet took too long. Try fewer photos at a time."
+                : "Couldn't read that photo. Try again with a clearer, straight-on shot.")
+        );
         return;
       }
       const scanned = (data.rows ?? []) as ScannedRow[];

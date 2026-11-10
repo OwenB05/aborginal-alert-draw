@@ -20,7 +20,7 @@ order, and each has a rollback that needs no deploy.
 | Two-step verification (TOTP) | **On; 1 of 4 organizers enrolled (2026-09-28)**, enrolment not yet mandatory | `middleware.ts` choke point + `/mfa*` |
 | Sign-in CAPTCHA | **On (Turnstile), verified 2026-09-28** — token-less sign-ins refused; organizers have signed in through it | Supabase Attack Protection verifies the token |
 | Canadian compute | **On** | `vercel.json` → `yul1` (Montréal) |
-| AI egress gate | **On since 2026-11-10** (owner's decision); scanning works once the Anthropic key is in Vault | `app_flags.ai_scanning` read inside `scan-sheet` |
+| AI sheet scanning | **On since 2026-11-10** (owner's decision), via Vercel AI Gateway — no AI key stored anywhere | `/api/scan-sheet` route; gate `app_flags.ai_scanning` via `ai_scanning_enabled()` |
 | Email delivery | **On** — invite/reset links, entry confirmations | `send-invite` / `send-entry-confirmation` Edge Functions; key in Vault |
 
 ---
@@ -46,12 +46,16 @@ Server-side secrets live in **Supabase Vault**, reachable only through
 can read them and the browser cannot:
 
 - `airtable_pat` → `get_airtable_pat()` (migration 0006)
-- `anthropic_api_key` → `get_anthropic_key()` (migration 0008) — not yet set;
-  add with `select vault.create_secret('<key>', 'anthropic_api_key');`
 - `resend_api_key` → `get_resend_key()` (migration 0011)
 
 To rotate a Vault secret without a deploy:
 `select vault.update_secret(id, '<new value>')` on that row.
+
+AI sheet scanning holds **no key at all**: the `/api/scan-sheet` route on
+Vercel authenticates to Vercel AI Gateway with the deployment's own
+short-lived OIDC token, and usage is billed to the team's gateway credits.
+The old Anthropic-key reader (`get_anthropic_key()`) was dropped in
+migration 0013.
 
 **Doctrine:** RLS is the boundary for the public; every privileged action runs
 either in an Edge Function holding the service role or in a `SECURITY
@@ -145,11 +149,13 @@ it come from — `remote_addr` in `auth_logs` should resolve to
 `ca-central-1`. The `x-vercel-id` header is not conclusive.
 
 **AI extraction** — reading a sign-up sheet sends a photo containing names,
-emails and signatures to Anthropic in the **United States**; Claude has no
-Canadian-resident inference on any platform. It shipped **off by default**,
-gated on `app_flags.ai_scanning` (migration 0009), which only Edge Functions
-can read. An absent API key is deliberately *not* treated as "off" — the
-decision is recorded, not incidental.
+emails and signatures through **Vercel AI Gateway** to Anthropic in the
+**United States**; Claude has no Canadian-resident inference on any
+platform. It shipped **off by default**, gated on `app_flags.ai_scanning`
+(migration 0009). The scan route runs as the signed-in organizer, so it reads
+the gate through `ai_scanning_enabled()` (migration 0013), which refuses
+anyone who isn't an organizer. The route also requires two-step
+verification to be satisfied, the same bar as the portal pages.
 
 **Decision recorded 2026-11-10:** Owen turned the gate **on**, accepting the
 US egress for sheet photos; a Canadian-hosted OCR engine was offered and
@@ -174,6 +180,9 @@ redact before egress.
 - `aboriginalalert.ca` itself is hosted outside Four Winds' control.
 - Email transits Resend (US): the recipient address, the draw title and
   prize, and — for invites — the one-time link itself.
+- AI sheet scanning (when used) passes the photo through Vercel AI Gateway
+  to Anthropic (US). The app stores neither the photo nor the model's raw
+  reply — only the rows an organizer approves.
 
 ---
 

@@ -34,6 +34,7 @@ yarn-error.log*
 # public-by-design Supabase values (URL + publishable key), protected by RLS.
 .env*
 !.env.production
+!.env.local.example
 
 # vercel
 .vercel

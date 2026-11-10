@@ -66,14 +66,16 @@ rollback for every layer.
   admin-checked, row-locked against double-clicks, uniformly random, and
   audit-logged.
 - **AI sheet scanning** (draw page → Scan sheet with AI): photos of a
-  signed paper sheet or a stack of cards are read by Claude Opus 5 vision in
-  the `scan-sheet` Edge Function, which returns proposed rows plus the
-  fields it was unsure about. Nothing is written automatically — the
-  organizer reviews/corrects every row and the app inserts them with
-  `source='scan'`. Requires an Anthropic API key: either a Supabase secret
-  named `ANTHROPIC_API_KEY`, or a Vault secret named `anthropic_api_key`
-  read through the service-role-only `get_anthropic_key()` (migration 0008).
-  Until one exists the endpoint returns a clear 503.
+  signed paper sheet or a stack of cards are read by Claude Opus 5 vision
+  through **Vercel AI Gateway**, in the `/api/scan-sheet` route, which
+  returns proposed rows plus the fields it was unsure about. Nothing is
+  written automatically — the organizer reviews/corrects every row and the
+  app inserts them with `source='scan'`. No AI key exists anywhere: on Vercel
+  the route authenticates with the deployment's OIDC token and usage bills to
+  the team's gateway credits (locally, `vercel env pull` or an optional
+  `AI_GATEWAY_API_KEY`). The route requires a signed-in organizer with
+  two-step verification satisfied, and the `ai_scanning` gate on (read via
+  `ai_scanning_enabled()`, migration 0013).
 - **Email** (Resend): `send-invite` emails invite and password-reset links
   (organizer-only; stamps `invites.emailed_at`) and `send-entry-confirmation`
   sends entrants a one-time confirmation after the public form. The latter is
