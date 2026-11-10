@@ -20,7 +20,7 @@ order, and each has a rollback that needs no deploy.
 | Two-step verification (TOTP) | **On; 1 of 4 organizers enrolled (2026-09-28)**, enrolment not yet mandatory | `middleware.ts` choke point + `/mfa*` |
 | Sign-in CAPTCHA | **On (Turnstile), verified 2026-09-28** — token-less sign-ins refused; organizers have signed in through it | Supabase Attack Protection verifies the token |
 | Canadian compute | **On** | `vercel.json` → `yul1` (Montréal) |
-| AI egress gate | **Off by default** | `app_flags.ai_scanning` read inside `scan-sheet` |
+| AI egress gate | **On since 2026-11-10** (owner's decision); scanning works once the Anthropic key is in Vault | `app_flags.ai_scanning` read inside `scan-sheet` |
 | Email delivery | **On** — invite/reset links, entry confirmations | `send-invite` / `send-entry-confirmation` Edge Functions; key in Vault |
 
 ---
@@ -46,7 +46,8 @@ Server-side secrets live in **Supabase Vault**, reachable only through
 can read them and the browser cannot:
 
 - `airtable_pat` → `get_airtable_pat()` (migration 0006)
-- `anthropic_api_key` → `get_anthropic_key()` (migration 0008) — not yet set
+- `anthropic_api_key` → `get_anthropic_key()` (migration 0008) — not yet set;
+  add with `select vault.create_secret('<key>', 'anthropic_api_key');`
 - `resend_api_key` → `get_resend_key()` (migration 0011)
 
 To rotate a Vault secret without a deploy:
@@ -145,11 +146,15 @@ it come from — `remote_addr` in `auth_logs` should resolve to
 
 **AI extraction** — reading a sign-up sheet sends a photo containing names,
 emails and signatures to Anthropic in the **United States**; Claude has no
-Canadian-resident inference on any platform. This is the module's only
-personal-data egress and it is **off by default**, gated on
-`app_flags.ai_scanning` (migration 0009), which only Edge Functions can read.
-An absent API key is deliberately *not* treated as "off" — the decision is
-recorded, not incidental.
+Canadian-resident inference on any platform. It shipped **off by default**,
+gated on `app_flags.ai_scanning` (migration 0009), which only Edge Functions
+can read. An absent API key is deliberately *not* treated as "off" — the
+decision is recorded, not incidental.
+
+**Decision recorded 2026-11-10:** Owen turned the gate **on**, accepting the
+US egress for sheet photos; a Canadian-hosted OCR engine was offered and
+declined. The reason is stored in the flag's `note` column. Only rows an
+organizer approves are saved; the photo itself is not stored by the app.
 
 Turn on: `update public.app_flags set enabled = true where name =
 'ai_scanning';` — **Rollback:** set it back to `false`. Instant, no deploy.
